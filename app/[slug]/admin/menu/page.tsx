@@ -36,6 +36,7 @@ export default async function MenuManagementPage({
       .map(item => ({
         ...item,
         foodType: item.foodType as 'veg' | 'egg' | 'non-veg',
+        isAvailable: item.isAvailable ?? true,
       })),
   }));
 
