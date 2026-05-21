@@ -23,8 +23,8 @@ interface MenuItem {
 export default function EditMenuItemPage() {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
-  const itemId = params.id as string;
+  const slug = params?.slug as string;
+  const itemId = params?.id as string;
   
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);

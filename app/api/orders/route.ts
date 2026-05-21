@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     // Fetch menu items to get prices and names with retry logic
     const menuItemIds = items.map((item: any) => item.menuItemId);
     
-    let menuItemRecords;
+    let menuItemRecords = null;
     let retries = 3;
     
     while (retries > 0) {
@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
         console.log(`⚠️ Database query failed, retrying... (${retries} attempts left)`);
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
       }
+    }
+
+    if (!menuItemRecords) {
+      throw new Error('Failed to fetch menu items');
     }
 
     const menuItemMap = new Map(

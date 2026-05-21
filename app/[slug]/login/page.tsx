@@ -52,7 +52,7 @@ export default function RestaurantLoginPage({
       }
 
       // Access code is valid, redirect to admin
-      const redirect = searchParams.get('redirect') || `/${slug}/admin`;
+      const redirect = searchParams?.get('redirect') || `/${slug}/admin`;
       router.push(redirect);
       router.refresh();
     } catch (err) {

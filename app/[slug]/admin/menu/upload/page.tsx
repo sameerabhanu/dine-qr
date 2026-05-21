@@ -8,7 +8,7 @@ import Link from 'next/link';
 export default function CSVUploadPage() {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);

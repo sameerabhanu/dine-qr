@@ -14,8 +14,8 @@ interface Category {
 export default function EditCategoryPage() {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
-  const categoryId = params.id as string;
+  const slug = params?.slug as string;
+  const categoryId = params?.id as string;
   
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);

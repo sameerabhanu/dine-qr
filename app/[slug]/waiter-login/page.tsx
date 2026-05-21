@@ -52,7 +52,7 @@ export default function WaiterLoginPage({
       }
 
       // PIN is valid, redirect to waiter dashboard
-      const redirect = searchParams.get('redirect') || `/${slug}/waiter`;
+      const redirect = searchParams?.get('redirect') || `/${slug}/waiter`;
       router.push(redirect);
       router.refresh();
     } catch (err) {

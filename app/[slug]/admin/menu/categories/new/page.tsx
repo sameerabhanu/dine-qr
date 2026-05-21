@@ -8,7 +8,7 @@ import Link from 'next/link';
 export default function NewCategoryPage() {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

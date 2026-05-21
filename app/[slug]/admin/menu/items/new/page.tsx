@@ -13,7 +13,7 @@ interface Category {
 export default function NewMenuItemPage() {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
