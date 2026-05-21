@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { QrCode, Download, Plus, Trash2 } from 'lucide-react';
+import { Download, Trash2, Plus } from 'lucide-react';
+import QRCode from 'qrcode';
 
 type Table = {
   id: string;
@@ -24,51 +25,29 @@ export default function TablesClient({
 }) {
   const router = useRouter();
   const [tables, setTables] = useState(initialTables);
-  const [adding, setAdding] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTableNumber, setNewTableNumber] = useState('');
 
   const handleDownloadQR = async (table: Table) => {
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(
-      `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/${slug}?table=${table.qrCode}`
-    )}`;
-    
     try {
-      const response = await fetch(qrUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `table-${table.tableNumber}-qr.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const qrCodeDataUrl = await QRCode.toDataURL(table.qrCode, {
+        width: 512,
+        margin: 2,
+      });
+
+      const link = document.createElement('a');
+      link.href = qrCodeDataUrl;
+      link.download = `table-${table.tableNumber}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error('Failed to download QR code:', error);
+      console.error('Error generating QR code:', error);
       alert('Failed to download QR code');
     }
   };
 
-  const handleAddTable = async () => {
-    setAdding(true);
-    try {
-      const response = await fetch(`/api/${slug}/tables`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (response.ok) {
-        router.refresh();
-      } else {
-        alert('Failed to add table');
-      }
-    } catch (error) {
-      alert('Error adding table');
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  const handleDeleteTable = async (tableId: string, tableNumber: string) => {
+  const handleDelete = async (tableId: string, tableNumber: string) => {
     if (!confirm(`Are you sure you want to delete Table ${tableNumber}?`)) {
       return;
     }
@@ -76,104 +55,127 @@ export default function TablesClient({
     try {
       const response = await fetch(`/api/${slug}/tables/${tableId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
+        // Optimistic update
+        setTables(tables.filter(t => t.id !== tableId));
         router.refresh();
       } else {
-        alert('Failed to delete table');
+        const error = await response.json();
+        alert(`Failed to delete table: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error deleting table:', error);
       alert('Error deleting table');
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-      {/* Add Table Button */}
-      <div className="mb-4 sm:mb-6">
-        <button
-          onClick={handleAddTable}
-          disabled={adding}
-          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition font-medium flex items-center gap-2 text-sm sm:text-base disabled:opacity-50"
-        >
-          <Plus className="w-4 h-4" />
-          {adding ? 'Adding...' : 'Add New Table'}
-        </button>
-      </div>
+  const handleAddTable = async () => {
+    if (!newTableNumber.trim()) {
+      alert('Please enter a table number');
+      return;
+    }
 
-      {tables.length === 0 ? (
-        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
-          <QrCode className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No tables found</h3>
-          <p className="text-sm sm:text-base text-gray-500 mb-4">
-            Add your first table to get started
-          </p>
+    setIsAdding(true);
+    try {
+      const response = await fetch(`/api/${slug}/tables`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tableNumber: newTableNumber }),
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Optimistic update
+        setTables([...tables, data.table]);
+        setNewTableNumber('');
+        router.refresh();
+      } else {
+        const error = await response.json();
+        alert(`Failed to add table: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error adding table:', error);
+      alert('Error adding table');
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Add New Table - Single Line */}
+      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <input
+            type="text"
+            placeholder="Table number (e.g., 1, 2, A1)"
+            value={newTableNumber}
+            onChange={(e) => setNewTableNumber(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
+            disabled={isAdding}
+          />
           <button
             onClick={handleAddTable}
-            disabled={adding}
-            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition font-medium inline-flex items-center gap-2 text-sm disabled:opacity-50"
+            disabled={isAdding}
+            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
-            Add Table
+            <span className="hidden sm:inline">Add Table</span>
           </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {tables.map(table => (
-            <div
-              key={table.id}
-              className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition"
-            >
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="text-center flex-1">
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-                    Table {table.tableNumber}
-                  </h3>
-                  <span
-                    className={`inline-flex px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${
-                      table.isActive ?? true
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    {table.isActive ?? true ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleDeleteTable(table.id, table.tableNumber)}
-                  className="p-1.5 hover:bg-red-100 rounded-lg transition text-red-600 flex-shrink-0"
-                  title="Delete Table"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+      </div>
 
-              <div className="bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl border border-gray-200 mb-3 sm:mb-4">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                    `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/${slug}?table=${table.qrCode}`
-                  )}`}
-                  alt={`QR Code for Table ${table.tableNumber}`}
-                  className="w-full h-auto"
-                />
-              </div>
-
-              <button
-                onClick={() => handleDownloadQR(table)}
-                className="w-full py-2 sm:py-2.5 bg-black text-white rounded-lg sm:rounded-xl hover:bg-gray-800 transition font-medium flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
+      {/* Tables List - Single Line Structure */}
+      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
+        {tables.length === 0 ? (
+          <div className="p-8 text-center text-gray-500 text-sm">
+            No tables added yet. Add your first table above.
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {tables.map((table) => (
+              <div
+                key={table.id}
+                className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-gray-50 transition"
               >
-                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Download QR Code
-              </button>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {/* Table Number */}
+                  <div className="flex-shrink-0 w-12 sm:w-16">
+                    <span className="text-sm sm:text-base font-bold text-gray-900">
+                      Table {table.tableNumber}
+                    </span>
+                  </div>
 
-              <p className="text-xs text-gray-500 text-center mt-2 sm:mt-3 break-all">
-                Scan URL: /{slug}?table={table.qrCode.slice(0, 8)}...
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+                  {/* Spacer */}
+                  <div className="flex-1 min-w-0" />
+
+                  {/* Download QR Button */}
+                  <button
+                    onClick={() => handleDownloadQR(table)}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition text-gray-900 flex-shrink-0"
+                    title="Download QR Code"
+                  >
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={() => handleDelete(table.id, table.tableNumber)}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition text-gray-900 flex-shrink-0"
+                    title="Delete Table"
+                  >
+                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

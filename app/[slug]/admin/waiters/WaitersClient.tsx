@@ -48,15 +48,24 @@ export default function WaitersClient({
           name: editData.name,
           accessCode: editData.accessCode,
         }),
+        credentials: 'include',
       });
 
       if (response.ok) {
+        // Optimistic update
+        setWaiters(waiters.map(w => 
+          w.id === waiterId 
+            ? { ...w, name: editData.name, accessCode: editData.accessCode } 
+            : w
+        ));
         setEditingId(null);
         router.refresh();
       } else {
-        alert('Failed to update waiter');
+        const error = await response.json();
+        alert(`Failed to update waiter: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error updating waiter:', error);
       alert('Error updating waiter');
     } finally {
       setLoading(false);
@@ -71,14 +80,23 @@ export default function WaitersClient({
         body: JSON.stringify({
           isActive: !currentStatus,
         }),
+        credentials: 'include',
       });
 
       if (response.ok) {
+        // Optimistic update
+        setWaiters(waiters.map(w => 
+          w.id === waiterId 
+            ? { ...w, isActive: !currentStatus } 
+            : w
+        ));
         router.refresh();
       } else {
-        alert('Failed to toggle status');
+        const error = await response.json();
+        alert(`Failed to toggle status: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error toggling status:', error);
       alert('Error toggling status');
     }
   };
@@ -91,14 +109,19 @@ export default function WaitersClient({
     try {
       const response = await fetch(`/api/${slug}/waiters/${waiterId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
+        // Optimistic update
+        setWaiters(waiters.filter(w => w.id !== waiterId));
         router.refresh();
       } else {
-        alert('Failed to delete waiter');
+        const error = await response.json();
+        alert(`Failed to delete waiter: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error deleting waiter:', error);
       alert('Error deleting waiter');
     }
   };

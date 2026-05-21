@@ -69,15 +69,18 @@ export default function MenuItemsList({
           name: editData.name,
           price: editData.price,
         }),
+        credentials: 'include',
       });
 
       if (response.ok) {
         setEditingId(null);
         router.refresh();
       } else {
-        alert('Failed to update item');
+        const error = await response.json();
+        alert(`Failed to update item: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error updating item:', error);
       alert('Error updating item');
     } finally {
       setLoading(false);
@@ -92,50 +95,59 @@ export default function MenuItemsList({
         body: JSON.stringify({
           isAvailable: !currentStatus,
         }),
+        credentials: 'include',
       });
 
       if (response.ok) {
         router.refresh();
       } else {
-        alert('Failed to toggle availability');
+        const error = await response.json();
+        alert(`Failed to toggle availability: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error toggling availability:', error);
       alert('Error toggling availability');
     }
   };
 
   const handleDeleteItem = async (itemId: string, itemName: string) => {
-    if (!confirm(`Delete "${itemName}"?`)) return;
+    if (!confirm(`Are you sure you want to delete "${itemName}"?`)) return;
 
     try {
       const response = await fetch(`/api/${slug}/menu/items/${itemId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
         router.refresh();
       } else {
-        alert('Failed to delete item');
+        const error = await response.json();
+        alert(`Failed to delete item: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error deleting item:', error);
       alert('Error deleting item');
     }
   };
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
-    if (!confirm(`Delete category "${categoryName}" and all its items?`)) return;
+    if (!confirm(`Are you sure you want to delete category "${categoryName}" and all its items?`)) return;
 
     try {
       const response = await fetch(`/api/${slug}/menu/categories/${categoryId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
         router.refresh();
       } else {
-        alert('Failed to delete category');
+        const error = await response.json();
+        alert(`Failed to delete category: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Error deleting category:', error);
       alert('Error deleting category');
     }
   };
