@@ -1,0 +1,11 @@
+category,name,price,food_type,description
+Starters,Paneer Tikka,299,veg,Grilled cottage cheese marinated in spices
+Starters,Egg Bhurji,199,egg,Spicy scrambled eggs with onions and tomatoes
+Starters,Chicken Wings,349,non-veg,Crispy fried wings with sauce
+Main Course,Butter Chicken,449,non-veg,Tender chicken in rich tomato gravy
+Main Course,Dal Makhani,299,veg,Black lentils in creamy sauce
+Main Course,Egg Curry,249,egg,Boiled eggs in spicy masala gravy
+Desserts,Gulab Jamun,149,veg,Soft milk dumplings in sugar syrup
+Desserts,Ice Cream,99,veg,Vanilla ice cream with chocolate sauce
+Beverages,Mango Lassi,99,veg,Refreshing yogurt drink
+Beverages,Masala Chai,49,veg,Traditional Indian spiced tea
