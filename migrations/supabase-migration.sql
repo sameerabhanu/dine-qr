@@ -26,6 +26,9 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'pending';
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP;
 
+-- 4.5. Add access_code column to staff table (if missing)
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS access_code VARCHAR(4);
+
 -- 5. Enable Row Level Security (required for Supabase Realtime)
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
