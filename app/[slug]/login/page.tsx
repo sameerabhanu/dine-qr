@@ -62,31 +62,31 @@ export default function RestaurantLoginPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-2xl mb-4">
-            <Lock className="w-8 h-8 text-white" />
+        {/* Logo/Header - Compact */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-black rounded-xl sm:rounded-2xl mb-3 sm:mb-4">
+            <Lock className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Restaurant Admin</h1>
-          <p className="text-gray-600">Enter your 4-digit access code</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Restaurant Admin</h1>
+          <p className="text-sm sm:text-base text-gray-600">Enter your 4-digit access code</p>
         </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Login Form - Compact */}
+        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-5 sm:p-6 md:p-8 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800">{error}</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-start gap-2 sm:gap-3">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs sm:text-sm text-red-800">{error}</p>
               </div>
             )}
 
             <div>
               <label
                 htmlFor="accessCode"
-                className="block text-sm font-semibold text-gray-900 mb-3 text-center"
+                className="block text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3 text-center"
               >
                 Access Code
               </label>
@@ -99,12 +99,12 @@ export default function RestaurantLoginPage({
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value.replace(/\D/g, ''))}
                 required
-                className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition font-mono text-3xl tracking-[1em] text-center"
+                className="w-full px-3 sm:px-4 py-3 sm:py-4 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition font-mono text-2xl sm:text-3xl tracking-[1em] text-center"
                 placeholder="****"
                 autoComplete="off"
                 autoFocus
               />
-              <p className="text-xs text-gray-500 text-center mt-3">
+              <p className="text-xs text-gray-500 text-center mt-2 sm:mt-3">
                 Enter the 4-digit code provided by the platform admin
               </p>
             </div>
@@ -112,16 +112,16 @@ export default function RestaurantLoginPage({
             <button
               type="submit"
               disabled={loading || accessCode.length !== 4}
-              className="w-full py-4 bg-black text-white rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-2.5 sm:py-3 md:py-4 bg-black text-white rounded-lg sm:rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   Verifying...
                 </>
               ) : (
                 <>
-                  <Lock className="w-5 h-5" />
+                  <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                   Access Admin Panel
                 </>
               )}
@@ -129,13 +129,13 @@ export default function RestaurantLoginPage({
           </form>
         </div>
 
-        {/* Back Link */}
-        <div className="text-center mt-6">
+        {/* Back Link - Compact */}
+        <div className="text-center mt-4 sm:mt-6">
           <Link
             href={slug ? `/${slug}` : '/'}
-            className="text-sm text-gray-600 hover:text-black transition inline-flex items-center gap-2"
+            className="text-xs sm:text-sm text-gray-600 hover:text-black transition inline-flex items-center gap-1.5 sm:gap-2"
           >
-            <QrCode className="w-4 h-4" />
+            <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Back to Menu
           </Link>
         </div>
