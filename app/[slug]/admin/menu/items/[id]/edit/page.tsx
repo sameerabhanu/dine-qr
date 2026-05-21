@@ -95,16 +95,6 @@ export default function EditMenuItemPage() {
     }
   };
 
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    setFormData(prev => ({ ...prev, imageUrl: url }));
-    setImagePreview(url);
-  };
-
-  const clearImage = () => {
-    setFormData(prev => ({ ...prev, imageUrl: '' }));
-    setImagePreview('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
