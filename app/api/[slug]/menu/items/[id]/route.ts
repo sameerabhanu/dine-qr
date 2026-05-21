@@ -74,7 +74,6 @@ export async function PATCH(
     const body = await request.json();
     const {
       name,
-      description,
       price,
       categoryId,
       foodType,
@@ -94,7 +93,6 @@ export async function PATCH(
       .update(menuItems)
       .set({
         name: name || undefined,
-        description: description !== undefined ? (description || null) : undefined,
         price: price !== undefined ? price.toString() : undefined,
         categoryId: categoryId || undefined,
         foodType: foodType || undefined,

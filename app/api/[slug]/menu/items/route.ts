@@ -68,7 +68,6 @@ export async function POST(
     const body = await request.json();
     const {
       name,
-      description,
       price,
       categoryId,
       foodType,
@@ -98,7 +97,6 @@ export async function POST(
         restaurantId: restaurant.id,
         categoryId,
         name,
-        description: description || null,
         price: price.toString(),
         foodType,
         isAvailable: isAvailable !== undefined ? isAvailable : true,

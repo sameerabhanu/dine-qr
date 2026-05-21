@@ -151,7 +151,6 @@ export async function POST(
           restaurantId: restaurant.id,
           categoryId,
           name: row.name,
-          description: row.description || null,
           price: price.toString(),
           foodType,
           isAvailable: true,

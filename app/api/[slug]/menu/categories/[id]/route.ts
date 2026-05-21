@@ -72,13 +72,12 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, description, displayOrder } = body;
+    const { name, displayOrder } = body;
 
     const [updatedCategory] = await db
       .update(categories)
       .set({
         name: name || undefined,
-        description: description || null,
         displayOrder: displayOrder !== undefined ? displayOrder : undefined,
       })
       .where(and(
