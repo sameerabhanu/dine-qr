@@ -8,7 +8,9 @@ type Table = {
   id: string;
   tableNumber: string;
   qrCode: string;
-  isActive: boolean;
+  isActive: boolean | null;
+  lastLoginAt?: string | null;
+  createdAt?: string | null;
 };
 
 export default function TablesClient({
@@ -128,12 +130,12 @@ export default function TablesClient({
                   </h3>
                   <span
                     className={`inline-flex px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${
-                      table.isActive
+                      table.isActive ?? true
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {table.isActive ? 'Active' : 'Inactive'}
+                    {table.isActive ?? true ? 'Active' : 'Inactive'}
                   </span>
                 </div>
                 <button
