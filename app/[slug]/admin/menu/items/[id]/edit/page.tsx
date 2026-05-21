@@ -266,45 +266,6 @@ export default function EditMenuItemPage() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-900 mb-2">
-                  Image URL
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    id="imageUrl"
-                    name="imageUrl"
-                    type="url"
-                    value={formData.imageUrl}
-                    onChange={handleImageUrlChange}
-                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent transition"
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  {imagePreview && (
-                    <button
-                      type="button"
-                      onClick={clearImage}
-                      className="px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-                {imagePreview && (
-                  <div className="mt-4">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-40 h-40 rounded-xl object-cover border border-gray-200"
-                      onError={() => {
-                        setImagePreview('');
-                        setError('Invalid image URL');
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-
               <div className="grid md:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="displayOrder" className="block text-sm font-medium text-gray-900 mb-2">
@@ -321,18 +282,21 @@ export default function EditMenuItemPage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-3 pt-8">
-                  <input
-                    id="isVeg"
-                    name="isVeg"
-                    type="checkbox"
-                    checked={formData.isVeg}
-                    onChange={handleInputChange}
-                    className="w-5 h-5 border-gray-300 rounded focus:ring-2 focus:ring-black"
-                  />
-                  <label htmlFor="isVeg" className="text-sm font-medium text-gray-900">
-                    Vegetarian
+                <div>
+                  <label htmlFor="foodType" className="block text-sm font-medium text-gray-900 mb-2">
+                    Food Type
                   </label>
+                  <select
+                    id="foodType"
+                    name="foodType"
+                    value={formData.foodType}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-black focus:border-transparent transition"
+                  >
+                    <option value="veg">Vegetarian</option>
+                    <option value="egg">Egg</option>
+                    <option value="non-veg">Non-Vegetarian</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center gap-3 pt-8">
