@@ -7,10 +7,14 @@ import { Pencil, Trash2, Check, X, User, UserCheck, UserX } from 'lucide-react';
 type Waiter = {
   id: string;
   name: string;
-  accessCode: string;
-  isActive: boolean;
-  lastLoginAt: string | null;
-  createdAt: string | null;
+  accessCode: string | null;
+  isActive: boolean | null;
+  email: string | null;
+  passwordHash: string | null;
+  role: string;
+  restaurantId: string;
+  lastLoginAt: Date | null;
+  createdAt: Date | null;
 };
 
 export default function WaitersClient({
@@ -31,7 +35,7 @@ export default function WaitersClient({
 
   const handleEdit = (waiter: Waiter) => {
     setEditingId(waiter.id);
-    setEditData({ name: waiter.name, accessCode: waiter.accessCode });
+    setEditData({ name: waiter.name, accessCode: waiter.accessCode ?? '' });
   };
 
   const handleSave = async (waiterId: string) => {
@@ -137,22 +141,22 @@ export default function WaitersClient({
                 />
               ) : (
                 <span className="w-14 sm:w-16 flex-shrink-0 text-xs sm:text-sm font-mono text-gray-900 text-center">
-                  {waiter.accessCode}
+                  {waiter.accessCode ?? '----'}
                 </span>
               )}
 
               {/* Status Toggle */}
               <button
-                onClick={() => handleToggleStatus(waiter.id, waiter.isActive)}
+                onClick={() => handleToggleStatus(waiter.id, waiter.isActive ?? true)}
                 className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  waiter.isActive ? 'bg-green-600' : 'bg-gray-200'
+                  waiter.isActive ?? true ? 'bg-green-600' : 'bg-gray-200'
                 }`}
                 disabled={editingId === waiter.id}
-                title={waiter.isActive ? 'Active' : 'Inactive'}
+                title={waiter.isActive ?? true ? 'Active' : 'Inactive'}
               >
                 <span
                   className={`inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    waiter.isActive ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
+                    waiter.isActive ?? true ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>
