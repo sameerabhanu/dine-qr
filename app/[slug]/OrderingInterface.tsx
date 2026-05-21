@@ -210,133 +210,138 @@ export default function OrderingInterface({
 
   return (
     <>
-      {/* Filter Toggles */}
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 py-4 px-6">
-        <div className="flex items-center gap-6 justify-center">
+      {/* Filter Toggles - Mobile Responsive */}
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 py-3 sm:py-4 px-3 sm:px-6">
+        <div className="flex items-center gap-3 sm:gap-6 justify-center flex-wrap">
           {/* Veg Toggle */}
           <button
             onClick={() => toggleFilter('veg')}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
             <div
-              className={`relative w-11 h-6 rounded-full transition-colors ${
+              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-colors ${
                 selectedFilters.has('veg') ? 'bg-green-600' : 'bg-gray-300'
               }`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
+                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
                   selectedFilters.has('veg') ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
                 <FoodTypeIcon type="veg" />
               </div>
             </div>
-            <span className="text-sm font-medium text-gray-700">Veg</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Veg</span>
           </button>
 
           {/* Egg Toggle */}
           <button
             onClick={() => toggleFilter('egg')}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
             <div
-              className={`relative w-11 h-6 rounded-full transition-colors ${
+              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-colors ${
                 selectedFilters.has('egg') ? 'bg-yellow-600' : 'bg-gray-300'
               }`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
+                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
                   selectedFilters.has('egg') ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
                 <FoodTypeIcon type="egg" />
               </div>
             </div>
-            <span className="text-sm font-medium text-gray-700">Egg</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Egg</span>
           </button>
 
           {/* Non-Veg Toggle */}
           <button
             onClick={() => toggleFilter('non-veg')}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
             <div
-              className={`relative w-11 h-6 rounded-full transition-colors ${
+              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-colors ${
                 selectedFilters.has('non-veg') ? 'bg-red-600' : 'bg-gray-300'
               }`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
+                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
                   selectedFilters.has('non-veg') ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
                 <FoodTypeIcon type="non-veg" />
               </div>
             </div>
-            <span className="text-sm font-medium text-gray-700">Non-Veg</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Non-Veg</span>
           </button>
         </div>
       </div>
 
-      {/* Menu */}
-      <div className="space-y-8 pb-24 px-6 pt-6">
+      {/* Menu - Single Line Compact Structure */}
+      <div className="space-y-4 sm:space-y-6 pb-24 px-3 sm:px-6 pt-4 sm:pt-6">
         {menuByCategory.map(category => {
           const filteredItems = filterItems(category.items);
           return filteredItems.length > 0 && (
-            <div key={category.id}>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {category.name}
-              </h2>
-              <div className="grid gap-4">
+            <div key={category.id} className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
+                <h2 className="text-base sm:text-lg font-bold text-gray-900">
+                  {category.name}
+                </h2>
+              </div>
+              <div className="divide-y divide-gray-200">
                 {filteredItems.map(item => {
                   const quantity = getItemQuantity(item.id);
                   return (
                     <div
                       key={item.id}
-                      className="bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-lg transition"
+                      className="px-3 sm:px-6 py-2 sm:py-3 hover:bg-gray-50 transition"
                     >
-                      <div className="flex gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FoodTypeIcon type={item.foodType} />
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {item.name}
-                            </h3>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-lg font-bold text-gray-900">
-                              ₹{parseFloat(item.price).toFixed(0)}
-                            </span>
-                            {quantity === 0 ? (
-                              <button
-                                onClick={() => addToCart(item)}
-                                disabled={!table}
-                                className="w-[100px] h-[38px] bg-black text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Add
-                              </button>
-                            ) : (
-                              <div className="w-[100px] h-[38px] flex items-center justify-center bg-black text-white rounded-lg px-1.5">
-                                <button
-                                  onClick={() => decrementItem(item)}
-                                  className="w-7 h-7 flex items-center justify-center hover:bg-gray-800 rounded transition flex-shrink-0"
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </button>
-                                <span className="font-semibold text-sm flex-1 text-center">
-                                  {quantity}
-                                </span>
-                                <button
-                                  onClick={() => addToCart(item)}
-                                  className="w-7 h-7 flex items-center justify-center hover:bg-gray-800 rounded transition flex-shrink-0"
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        {/* Food Type Icon */}
+                        <div className="flex-shrink-0">
+                          <FoodTypeIcon type={item.foodType} />
                         </div>
+
+                        {/* Item Name */}
+                        <span className="flex-1 min-w-0 text-xs sm:text-sm font-medium text-gray-900 truncate">
+                          {item.name}
+                        </span>
+
+                        {/* Price */}
+                        <span className="w-16 sm:w-20 flex-shrink-0 text-xs sm:text-sm font-semibold text-gray-900 text-right">
+                          ₹{parseFloat(item.price).toFixed(0)}
+                        </span>
+
+                        {/* Add/Quantity Controls */}
+                        {quantity === 0 ? (
+                          <button
+                            onClick={() => addToCart(item)}
+                            disabled={!table}
+                            className="w-16 sm:w-20 h-7 sm:h-8 bg-black text-white rounded-lg hover:bg-gray-800 transition text-xs sm:text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 flex-shrink-0"
+                          >
+                            <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                            <span className="hidden sm:inline">Add</span>
+                          </button>
+                        ) : (
+                          <div className="w-16 sm:w-20 h-7 sm:h-8 flex items-center justify-between bg-black text-white rounded-lg px-1 flex-shrink-0">
+                            <button
+                              onClick={() => decrementItem(item)}
+                              className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center hover:bg-gray-800 rounded transition"
+                            >
+                              <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                            </button>
+                            <span className="font-semibold text-xs sm:text-sm">
+                              {quantity}
+                            </span>
+                            <button
+                              onClick={() => addToCart(item)}
+                              className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center hover:bg-gray-800 rounded transition"
+                            >
+                              <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -347,15 +352,15 @@ export default function OrderingInterface({
         })}
       </div>
 
-      {/* Cart Button */}
+      {/* Cart Button - Mobile Responsive */}
       {table && cartItemCount > 0 && (
         <button
           onClick={() => setShowCart(true)}
-          className="fixed bottom-6 right-6 bg-black text-white px-6 py-4 rounded-2xl shadow-2xl hover:bg-gray-800 transition flex items-center gap-3 z-40"
+          className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 bg-black text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl hover:bg-gray-800 transition flex items-center gap-2 sm:gap-3 z-40"
         >
-          <ShoppingCart className="w-5 h-5" />
-          <span className="font-semibold">{cartItemCount} items</span>
-          <span className="font-bold">₹{calculateTotal().toFixed(0)}</span>
+          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="font-semibold text-xs sm:text-base">{cartItemCount} <span className="hidden sm:inline">items</span></span>
+          <span className="font-bold text-xs sm:text-base">₹{calculateTotal().toFixed(0)}</span>
         </button>
       )}
 
