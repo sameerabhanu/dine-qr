@@ -141,28 +141,28 @@ export default function MenuItemsList({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {categories.map(category => (
-        <div key={category.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">{category.name}</h2>
+        <div key={category.id} className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900">{category.name}</h2>
             <button
               onClick={() => handleDeleteCategory(category.id, category.name)}
-              className="p-2 hover:bg-red-100 rounded-lg transition text-red-600"
+              className="p-1.5 sm:p-2 hover:bg-red-100 rounded-lg transition text-red-600"
               title="Delete Category"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
           {category.items.length === 0 ? (
-            <div className="p-6 text-center text-gray-500 text-sm">
+            <div className="p-4 sm:p-6 text-center text-gray-500 text-xs sm:text-sm">
               No items in this category
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
               {category.items.map(item => (
-                <div key={item.id} className="px-6 py-3 hover:bg-gray-50 transition">
-                  <div className="flex items-center gap-4">
+                <div key={item.id} className="px-3 sm:px-6 py-2 sm:py-3 hover:bg-gray-50 transition">
+                  <div className="flex items-center gap-2 sm:gap-4">
                     {/* Food Type Icon */}
                     <div className="flex-shrink-0">
                       <FoodTypeIcon type={item.foodType} />
@@ -174,11 +174,11 @@ export default function MenuItemsList({
                         type="text"
                         value={editData.name}
                         onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                        className="flex-1 min-w-0 px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-black"
                         autoFocus
                       />
                     ) : (
-                      <span className="flex-1 text-sm font-medium text-gray-900">
+                      <span className="flex-1 min-w-0 text-xs sm:text-sm font-medium text-gray-900 truncate">
                         {item.name}
                       </span>
                     )}
@@ -190,10 +190,10 @@ export default function MenuItemsList({
                         step="0.01"
                         value={editData.price}
                         onChange={(e) => setEditData({ ...editData, price: e.target.value })}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                        className="w-16 sm:w-24 px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-black"
                       />
                     ) : (
-                      <span className="w-24 text-sm font-semibold text-gray-900">
+                      <span className="w-16 sm:w-24 flex-shrink-0 text-xs sm:text-sm font-semibold text-gray-900 text-right">
                         ₹{parseFloat(item.price).toFixed(0)}
                       </span>
                     )}
@@ -201,56 +201,56 @@ export default function MenuItemsList({
                     {/* Toggle Availability */}
                     <button
                       onClick={() => handleToggleAvailability(item.id, item.isAvailable)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                         item.isAvailable ? 'bg-green-600' : 'bg-gray-200'
                       }`}
                       disabled={editingId === item.id}
                     >
                       <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          item.isAvailable ? 'translate-x-5' : 'translate-x-0'
+                        className={`inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          item.isAvailable ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
                         }`}
                       />
                     </button>
 
                     {/* Edit / Save / Cancel */}
                     {editingId === item.id ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         <button
                           onClick={() => handleSave(item.id)}
                           disabled={loading}
-                          className="p-1.5 hover:bg-green-100 rounded-lg transition text-green-600"
+                          className="p-1 sm:p-1.5 hover:bg-green-100 rounded-lg transition text-green-600"
                           title="Save"
                         >
-                          <Check className="w-4 h-4" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
                           disabled={loading}
-                          className="p-1.5 hover:bg-gray-200 rounded-lg transition text-gray-600"
+                          className="p-1 sm:p-1.5 hover:bg-gray-200 rounded-lg transition text-gray-600"
                           title="Cancel"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     ) : (
                       <button
                         onClick={() => handleEdit(item)}
-                        className="p-1.5 hover:bg-gray-200 rounded-lg transition text-gray-600"
+                        className="p-1 sm:p-1.5 hover:bg-gray-200 rounded-lg transition text-gray-600 flex-shrink-0"
                         title="Edit"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                     )}
 
                     {/* Delete */}
                     <button
                       onClick={() => handleDeleteItem(item.id, item.name)}
-                      className="p-1.5 hover:bg-red-100 rounded-lg transition text-red-600"
+                      className="p-1 sm:p-1.5 hover:bg-red-100 rounded-lg transition text-red-600 flex-shrink-0"
                       title="Delete"
                       disabled={editingId === item.id}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>

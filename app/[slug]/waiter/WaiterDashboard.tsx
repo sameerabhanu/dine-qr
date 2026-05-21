@@ -230,118 +230,118 @@ export default function WaiterDashboard({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header - Mobile Responsive */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
               {restaurant.logoUrl ? (
                 <img 
                   src={restaurant.logoUrl} 
                   alt={restaurant.name}
-                  className="w-12 h-12 rounded-xl object-cover"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
-                  <QrCode className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                  <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
               )}
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">{restaurant.name}</h1>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <User className="w-3.5 h-3.5" />
-                  <span>{waiter.name}</span>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">{restaurant.name}</h1>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                  <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                  <span className="truncate">{waiter.name}</span>
                 </div>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition flex items-center gap-2"
+              className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition flex items-center gap-1.5 sm:gap-2 flex-shrink-0"
               title="Logout"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden sm:inline text-sm font-medium">Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0" />
+            <p className="text-xs sm:text-sm text-red-800">{error}</p>
           </div>
         )}
 
-        {/* Pending Orders Section */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5" />
+        {/* Pending Orders Section - Mobile Responsive */}
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
             Pending Orders ({pendingOrders.length})
           </h2>
           
           {pendingOrders.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
-              <p className="text-gray-500">No pending orders at the moment</p>
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
+              <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-green-500 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
+              <p className="text-sm sm:text-base text-gray-500">No pending orders at the moment</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {pendingOrders.map(({ order, table, items }) => (
                 <div
                   key={order.id}
-                  className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition"
+                  className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-4 md:p-6 hover:shadow-lg transition"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-gray-900">
+                  <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                           Table {table?.tableNumber || 'N/A'}
                         </h3>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
                           #{order.orderNumber}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Clock className="w-4 h-4" />
-                        <span>
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 flex-wrap">
+                        <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        <span className="truncate">
                           {order.createdAt ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true }) : 'Just now'}
                         </span>
                         {order.createdAt && Date.now() - new Date(order.createdAt).getTime() > 10 * 60 * 1000 && (
-                          <span className="ml-2 px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                          <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
                             URGENT
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-2xl font-bold text-gray-900">
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-xl sm:text-2xl font-bold text-gray-900">
                         ₹{parseFloat(order.totalAmount || '0').toFixed(0)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Order Items */}
+                  {/* Order Items - Mobile Responsive */}
                   {items && items.length > 0 && (
-                    <div className="mb-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="flex items-center gap-2 mb-3">
-                        <ShoppingBag className="w-4 h-4 text-gray-700" />
-                        <h4 className="font-semibold text-gray-900">Order Items</h4>
+                    <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl">
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                        <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" />
+                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Order Items</h4>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1.5 sm:space-y-2">
                         {items.map((item) => (
-                          <div key={item.id} className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <span className="text-gray-900 font-medium">
+                          <div key={item.id} className="flex justify-between items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-gray-900 font-medium text-xs sm:text-sm block">
                                 {item.quantity}x {item.menuItemName}
                               </span>
                               {item.notes && (
-                                <p className="text-xs text-gray-500 mt-1">Note: {item.notes}</p>
+                                <p className="text-xs text-gray-500 mt-1 break-words">Note: {item.notes}</p>
                               )}
                             </div>
-                            <span className="text-gray-700 font-medium ml-4">
+                            <span className="text-gray-700 font-medium text-xs sm:text-sm flex-shrink-0">
                               ₹{parseFloat(item.subtotal).toFixed(0)}
                             </span>
                           </div>
@@ -351,8 +351,8 @@ export default function WaiterDashboard({
                   )}
 
                   {order.specialInstructions && (
-                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
-                      <p className="text-sm text-yellow-800">
+                    <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-xl">
+                      <p className="text-xs sm:text-sm text-yellow-800 break-words">
                         <span className="font-semibold">Note:</span> {order.specialInstructions}
                       </p>
                     </div>
@@ -361,11 +361,11 @@ export default function WaiterDashboard({
                   <button
                     onClick={() => handleClaimOrder(order.id)}
                     disabled={claimingId === order.id}
-                    className="w-full py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-2.5 sm:py-3 bg-black text-white rounded-lg sm:rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                   >
                     {claimingId === order.id ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         Claiming...
                       </>
                     ) : (
@@ -378,64 +378,64 @@ export default function WaiterDashboard({
           )}
         </div>
 
-        {/* My Orders Section */}
+        {/* My Orders Section - Mobile Responsive */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <CheckCircle className="w-5 h-5" />
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             My Orders ({myOrders.length})
           </h2>
           
           {myOrders.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-              <p className="text-gray-500">You have no orders in progress</p>
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
+              <p className="text-sm sm:text-base text-gray-500">You have no orders in progress</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {myOrders.map(({ order, table, items }) => (
                 <div
                   key={order.id}
-                  className="bg-white rounded-2xl border-2 border-green-200 p-4 sm:p-6"
+                  className="bg-white rounded-xl sm:rounded-2xl border-2 border-green-200 p-3 sm:p-4 md:p-6"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-gray-900">
+                  <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                           Table {table?.tableNumber || 'N/A'}
                         </h3>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
                           #{order.orderNumber}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-xs sm:text-sm text-gray-600 truncate">
                         Claimed {order.claimedAt ? formatDistanceToNow(new Date(order.claimedAt), { addSuffix: true }) : 'Just now'}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-2xl font-bold text-gray-900">
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-xl sm:text-2xl font-bold text-gray-900">
                         ₹{parseFloat(order.totalAmount || '0').toFixed(0)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Order Items */}
+                  {/* Order Items - Mobile Responsive */}
                   {items && items.length > 0 && (
-                    <div className="mb-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="flex items-center gap-2 mb-3">
-                        <ShoppingBag className="w-4 h-4 text-gray-700" />
-                        <h4 className="font-semibold text-gray-900">Order Items</h4>
+                    <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl">
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                        <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" />
+                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Order Items</h4>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1.5 sm:space-y-2">
                         {items.map((item) => (
-                          <div key={item.id} className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <span className="text-gray-900 font-medium">
+                          <div key={item.id} className="flex justify-between items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-gray-900 font-medium text-xs sm:text-sm block">
                                 {item.quantity}x {item.menuItemName}
                               </span>
                               {item.notes && (
-                                <p className="text-xs text-gray-500 mt-1">Note: {item.notes}</p>
+                                <p className="text-xs text-gray-500 mt-1 break-words">Note: {item.notes}</p>
                               )}
                             </div>
-                            <span className="text-gray-700 font-medium ml-4">
+                            <span className="text-gray-700 font-medium text-xs sm:text-sm flex-shrink-0">
                               ₹{parseFloat(item.subtotal).toFixed(0)}
                             </span>
                           </div>
@@ -445,8 +445,8 @@ export default function WaiterDashboard({
                   )}
 
                   {order.specialInstructions && (
-                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
-                      <p className="text-sm text-yellow-800">
+                    <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-xl">
+                      <p className="text-xs sm:text-sm text-yellow-800 break-words">
                         <span className="font-semibold">Note:</span> {order.specialInstructions}
                       </p>
                     </div>
@@ -455,16 +455,16 @@ export default function WaiterDashboard({
                   <button
                     onClick={() => handleCompleteOrder(order.id, 'cash')}
                     disabled={completingId === order.id}
-                    className="w-full py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-2.5 sm:py-3 bg-green-600 text-white rounded-lg sm:rounded-xl hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                   >
                     {completingId === order.id ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         Completing...
                       </>
                     ) : (
                       <>
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                         Mark as Completed
                       </>
                     )}
@@ -475,93 +475,93 @@ export default function WaiterDashboard({
           )}
         </div>
 
-        {/* Invoice Modal */}
+        {/* Invoice Modal - Mobile Responsive */}
         {showInvoice && invoiceData && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Invoice</h2>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Invoice</h2>
                   <button
                     onClick={() => setShowInvoice(null)}
-                    className="text-gray-500 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition"
+                    className="text-gray-500 hover:text-gray-900 p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
 
                 {/* Restaurant Info */}
-                <div className="mb-6 pb-6 border-b border-gray-200">
-                  <h3 className="font-bold text-lg">{invoiceData.restaurant?.name}</h3>
-                  <p className="text-sm text-gray-600">{invoiceData.restaurant?.address}</p>
-                  <p className="text-sm text-gray-600">{invoiceData.restaurant?.phone}</p>
+                <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
+                  <h3 className="font-bold text-base sm:text-lg">{invoiceData.restaurant?.name}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">{invoiceData.restaurant?.address}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{invoiceData.restaurant?.phone}</p>
                 </div>
 
                 {/* Order Info */}
-                <div className="mb-6 pb-6 border-b border-gray-200">
-                  <div className="flex justify-between text-sm mb-2">
+                <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
+                  <div className="flex justify-between text-xs sm:text-sm mb-2">
                     <span className="text-gray-600">Order #:</span>
                     <span className="font-semibold">{invoiceData.order?.orderNumber}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">Table:</span>
                     <span className="font-semibold">{invoiceData.table?.tableNumber}</span>
                   </div>
                 </div>
 
                 {/* Items */}
-                <div className="mb-6 pb-6 border-b border-gray-200">
-                  <h4 className="font-semibold mb-3">Items</h4>
-                  <div className="space-y-2">
+                <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
+                  <h4 className="font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Items</h4>
+                  <div className="space-y-1.5 sm:space-y-2">
                     {invoiceData.items?.map((item: any) => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span>{item.quantity}x {item.menuItemName}</span>
-                        <span>₹{parseFloat(item.subtotal).toFixed(2)}</span>
+                      <div key={item.id} className="flex justify-between text-xs sm:text-sm">
+                        <span className="break-words pr-2">{item.quantity}x {item.menuItemName}</span>
+                        <span className="flex-shrink-0">₹{parseFloat(item.subtotal).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Billing */}
-                <div className="space-y-2 mb-6">
-                  <div className="flex justify-between text-sm">
+                <div className="space-y-1.5 sm:space-y-2 mb-4 sm:mb-6">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">Subtotal:</span>
                     <span>₹{invoiceData.billing?.subtotal}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">GST (5%):</span>
                     <span>₹{invoiceData.billing?.gst}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">Service Charge (10%):</span>
                     <span>₹{invoiceData.billing?.serviceCharge}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-lg pt-2 border-t-2 border-gray-300">
+                  <div className="flex justify-between font-bold text-base sm:text-lg pt-2 border-t-2 border-gray-300">
                     <span>Total:</span>
                     <span>₹{invoiceData.billing?.total}</span>
                   </div>
                 </div>
 
                 {/* Payment Buttons */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <button
                     onClick={() => handleCompleteOrder(showInvoice, 'cash')}
                     disabled={completingId === showInvoice}
-                    className="py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-semibold disabled:opacity-50 text-sm"
+                    className="py-2 sm:py-3 bg-green-600 text-white rounded-lg sm:rounded-xl hover:bg-green-700 transition font-semibold disabled:opacity-50 text-xs sm:text-sm"
                   >
                     Cash
                   </button>
                   <button
                     onClick={() => handleCompleteOrder(showInvoice, 'card')}
                     disabled={completingId === showInvoice}
-                    className="py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold disabled:opacity-50 text-sm"
+                    className="py-2 sm:py-3 bg-blue-600 text-white rounded-lg sm:rounded-xl hover:bg-blue-700 transition font-semibold disabled:opacity-50 text-xs sm:text-sm"
                   >
                     Card
                   </button>
                   <button
                     onClick={() => handleCompleteOrder(showInvoice, 'upi')}
                     disabled={completingId === showInvoice}
-                    className="py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition font-semibold disabled:opacity-50 text-sm"
+                    className="py-2 sm:py-3 bg-purple-600 text-white rounded-lg sm:rounded-xl hover:bg-purple-700 transition font-semibold disabled:opacity-50 text-xs sm:text-sm"
                   >
                     UPI
                   </button>
