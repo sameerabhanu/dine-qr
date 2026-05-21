@@ -378,13 +378,13 @@ export default function OrderingInterface({
         </button>
       )}
 
-      {/* Cart Modal */}
+      {/* Cart Modal - Compact Design */}
       {showCart && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            {/* Header - Compact */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                 {orderPlaced ? 'Order Placed!' : 'Your Order'}
               </h2>
               <button
@@ -393,104 +393,103 @@ export default function OrderingInterface({
                   setOrderPlaced(false);
                   setPlacedOrderDetails(null);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            {/* Success Message */}
+            {/* Success Message - Compact */}
             {orderPlaced && placedOrderDetails && (
-              <div className="p-6 bg-green-50 border-b border-green-200">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                    <Check className="w-6 h-6 text-white" />
+              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-green-50 border-b border-green-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <div>
-                    <p className="font-bold text-green-900 text-lg">Order Confirmed!</p>
-                    <p className="text-sm text-green-700">Your order has been sent to the kitchen</p>
+                  <div className="min-w-0">
+                    <p className="font-bold text-green-900 text-sm sm:text-base">Order Confirmed!</p>
+                    <p className="text-xs sm:text-sm text-green-700">Your order has been sent to the kitchen</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {orderPlaced && placedOrderDetails ? (
-                // Show placed order items
-                placedOrderDetails.items.map((item, index) => (
-                  <div key={index} className="flex gap-4 pb-4 border-b border-gray-100">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+            {/* Cart Items - Single Line Compact Structure */}
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4">
+              <div className="divide-y divide-gray-200">
+                {orderPlaced && placedOrderDetails ? (
+                  // Show placed order items - Compact
+                  placedOrderDetails.items.map((item, index) => (
+                    <div key={index} className="py-2 sm:py-2.5">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <FoodTypeIcon type={item.menuItem.foodType} />
-                        <h3 className="font-semibold text-gray-900">
+                        <span className="flex-1 min-w-0 text-xs sm:text-sm font-medium text-gray-900 truncate">
                           {item.menuItem.name}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        ₹{parseFloat(item.menuItem.price).toFixed(0)} × {item.quantity}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">
-                        ₹{(parseFloat(item.menuItem.price) * item.quantity).toFixed(0)}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                // Show current cart items
-                cart.map((item, index) => (
-                  <div key={index} className="flex gap-4 pb-4 border-b border-gray-100">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <FoodTypeIcon type={item.menuItem.foodType} />
-                        <h3 className="font-semibold text-gray-900">
-                          {item.menuItem.name}
-                        </h3>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        ₹{parseFloat(item.menuItem.price).toFixed(0)} each
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => updateQuantity(index, -1)}
-                          className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="font-semibold text-gray-900 w-8 text-center">
-                          {item.quantity}
                         </span>
+                        <span className="text-xs sm:text-sm text-gray-600 flex-shrink-0">
+                          ×{item.quantity}
+                        </span>
+                        <span className="w-16 sm:w-20 text-xs sm:text-sm font-semibold text-gray-900 text-right flex-shrink-0">
+                          ₹{(parseFloat(item.menuItem.price) * item.quantity).toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  // Show current cart items - Compact with controls
+                  cart.map((item, index) => (
+                    <div key={index} className="py-2 sm:py-2.5">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <FoodTypeIcon type={item.menuItem.foodType} />
+                        <span className="flex-1 min-w-0 text-xs sm:text-sm font-medium text-gray-900 truncate">
+                          {item.menuItem.name}
+                        </span>
+                        <span className="text-xs sm:text-sm text-gray-600 flex-shrink-0">
+                          @₹{parseFloat(item.menuItem.price).toFixed(0)}
+                        </span>
+                        
+                        {/* Quantity Controls - Compact */}
+                        <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+                          <button
+                            onClick={() => updateQuantity(index, -1)}
+                            className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center hover:bg-gray-200 transition"
+                          >
+                            <Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          </button>
+                          <span className="font-semibold text-gray-900 w-5 sm:w-6 text-center text-xs sm:text-sm">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(index, 1)}
+                            className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center hover:bg-gray-200 transition"
+                          >
+                            <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          </button>
+                        </div>
+                        
+                        <span className="w-12 sm:w-16 text-xs sm:text-sm font-semibold text-gray-900 text-right flex-shrink-0">
+                          ₹{(parseFloat(item.menuItem.price) * item.quantity).toFixed(0)}
+                        </span>
+                        
                         <button
-                          onClick={() => updateQuantity(index, 1)}
-                          className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
+                          onClick={() => removeFromCart(index)}
+                          className="text-red-600 hover:text-red-700 flex-shrink-0"
+                          title="Remove"
                         >
-                          <Plus className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900 mb-2">
-                        ₹{(parseFloat(item.menuItem.price) * item.quantity).toFixed(0)}
-                      </p>
-                      <button
-                        onClick={() => removeFromCart(index)}
-                        className="text-sm text-red-600 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t border-gray-200 space-y-4">
-              <div className="flex items-center justify-between text-lg">
-                <span className="font-semibold text-gray-900">Total</span>
-                <span className="font-bold text-gray-900 text-2xl">
+            {/* Footer - Compact */}
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-gray-900 text-sm sm:text-base">Total</span>
+                <span className="font-bold text-gray-900 text-lg sm:text-xl">
                   ₹{orderPlaced && placedOrderDetails ? placedOrderDetails.total.toFixed(0) : calculateTotal().toFixed(0)}
                 </span>
               </div>
@@ -501,16 +500,16 @@ export default function OrderingInterface({
                     setOrderPlaced(false);
                     setPlacedOrderDetails(null);
                   }}
-                  className="w-full py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-semibold flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 bg-green-600 text-white rounded-lg sm:rounded-xl hover:bg-green-700 transition font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <Check className="w-5 h-5" />
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                   Done
                 </button>
               ) : (
                 <button
                   onClick={placeOrder}
                   disabled={loading}
-                  className="w-full py-4 bg-black text-white rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 bg-black text-white rounded-lg sm:rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   {loading ? 'Placing Order...' : 'Place Order'}
                 </button>
