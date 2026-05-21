@@ -7,7 +7,7 @@ import { startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import LogoutButton from '@/components/LogoutButton';
-import { ChefHat, ShoppingBag, DollarSign, TrendingUp, Settings, Menu, Plus } from 'lucide-react';
+import { ChefHat, ShoppingBag, TrendingUp, Settings, Menu, Plus } from 'lucide-react';
 
 export default async function RestaurantAdminPage({
   params,
@@ -61,17 +61,22 @@ export default async function RestaurantAdminPage({
     .from(tables)
     .where(eq(tables.restaurantId, restaurant.id));
 
-  // Fetch recent orders
-  const recentOrders = await db
+  // Fetch today's orders
+  const todayOrdersList = await db
     .select({
       order: orders,
       table: tables,
     })
     .from(orders)
     .leftJoin(tables, eq(orders.tableId, tables.id))
-    .where(eq(orders.restaurantId, restaurant.id))
+    .where(
+      and(
+        eq(orders.restaurantId, restaurant.id),
+        gte(orders.createdAt, today)
+      )
+    )
     .orderBy(desc(orders.createdAt))
-    .limit(10);
+    .limit(50);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,19 +94,6 @@ export default async function RestaurantAdminPage({
             </div>
             <div className="flex items-center gap-3">
               <LogoutButton slug={slug} />
-              <Link
-                href={`/${slug}/kitchen`}
-                className="px-4 py-2 bg-gray-100 text-gray-900 rounded-xl hover:bg-gray-200 transition font-medium flex items-center gap-2"
-              >
-                <ChefHat className="w-4 h-4" />
-                Kitchen Display
-              </Link>
-              <Link
-                href={`/${slug}`}
-                className="px-4 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition font-medium"
-              >
-                View Menu
-              </Link>
             </div>
           </div>
         </div>
@@ -110,7 +102,7 @@ export default async function RestaurantAdminPage({
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
@@ -124,12 +116,12 @@ export default async function RestaurantAdminPage({
           <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-gray-900" />
+                <TrendingUp className="w-6 h-6 text-gray-900" />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Today&apos;s Revenue</p>
+            <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
             <p className="text-3xl font-bold text-gray-900">
-              {formatCurrency(todayRevenue)}
+              {formatCurrency(totalRevenue)}
             </p>
           </div>
 
@@ -142,24 +134,12 @@ export default async function RestaurantAdminPage({
             <p className="text-sm text-gray-600 mb-1">Menu Items</p>
             <p className="text-3xl font-bold text-gray-900">{menuItemsCount.count}</p>
           </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-gray-900" />
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
-            <p className="text-3xl font-bold text-gray-900">
-              {formatCurrency(totalRevenue)}
-            </p>
-          </div>
         </div>
 
         {/* Quick Actions */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link
               href={`/${slug}/admin/menu`}
               className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-center"
@@ -184,36 +164,20 @@ export default async function RestaurantAdminPage({
               <p className="font-semibold text-gray-900">Manage Waiters</p>
               <p className="text-sm text-gray-500 mt-1">Add and manage waiters</p>
             </Link>
-            <Link
-              href={`/${slug}/admin/orders/completed`}
-              className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-center"
-            >
-              <ChefHat className="w-8 h-8 text-gray-900 mx-auto mb-2" />
-              <p className="font-semibold text-gray-900">Completed Orders</p>
-              <p className="text-sm text-gray-500 mt-1">View today's revenue</p>
-            </Link>
-            <Link
-              href={`/${slug}/admin/orders`}
-              className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-center"
-            >
-              <ShoppingBag className="w-8 h-8 text-gray-900 mx-auto mb-2" />
-              <p className="font-semibold text-gray-900">All Orders</p>
-              <p className="text-sm text-gray-500 mt-1">Order history</p>
-            </Link>
           </div>
         </div>
 
-        {/* Recent Orders */}
+        {/* Today's Orders */}
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
+            <h2 className="text-xl font-bold text-gray-900">Today&apos;s Orders</h2>
           </div>
           <div className="overflow-x-auto">
-            {recentOrders.length === 0 ? (
+            {todayOrdersList.length === 0 ? (
               <div className="p-12 text-center">
                 <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-                <p className="text-gray-500">Orders will appear here once customers start ordering</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders today</h3>
+                <p className="text-gray-500">Orders will appear here when customers start ordering</p>
               </div>
             ) : (
               <table className="w-full">
@@ -237,7 +201,7 @@ export default async function RestaurantAdminPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {recentOrders.map(({ order, table }) => (
+                  {todayOrdersList.map(({ order, table }) => (
                     <tr key={order.id} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         #{order.orderNumber}
