@@ -66,7 +66,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { name, description, displayOrder } = body;
+    const { name, displayOrder } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
@@ -78,7 +78,6 @@ export async function POST(
         id: randomUUID(),
         restaurantId: restaurant.id,
         name,
-        description: description || null,
         displayOrder: displayOrder || 0,
         isActive: true,
         createdAt: new Date(),
