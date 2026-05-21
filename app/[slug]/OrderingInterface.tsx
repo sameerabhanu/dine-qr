@@ -180,27 +180,41 @@ export default function OrderingInterface({
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Food type icon component
-  const FoodTypeIcon = ({ type, size = 'default' }: { type: string; size?: 'default' | 'large' }) => {
-    const sizeClasses = size === 'large' ? 'w-6 h-6' : 'w-5 h-5';
-    const dotClasses = size === 'large' ? 'w-3 h-3' : 'w-2.5 h-2.5';
+  const FoodTypeIcon = ({ type, size = 'default' }: { type: string; size?: 'default' | 'large' | 'toggle' }) => {
+    let sizeClasses, dotClasses, borderRadius;
+    
+    if (size === 'toggle') {
+      // Smaller icon for toggle switches
+      sizeClasses = 'w-3 h-3 sm:w-3.5 sm:h-3.5';
+      dotClasses = 'w-1.5 h-1.5';
+      borderRadius = 'rounded-sm'; // Less radius
+    } else if (size === 'large') {
+      sizeClasses = 'w-6 h-6';
+      dotClasses = 'w-3 h-3';
+      borderRadius = 'rounded';
+    } else {
+      sizeClasses = 'w-4 h-4 sm:w-5 sm:h-5';
+      dotClasses = 'w-2 h-2 sm:w-2.5 sm:h-2.5';
+      borderRadius = 'rounded-sm';
+    }
     
     if (type === 'veg') {
       return (
-        <div className={`${sizeClasses} border-2 border-green-600 rounded flex items-center justify-center`}>
+        <div className={`${sizeClasses} border-2 border-green-600 ${borderRadius} flex items-center justify-center`}>
           <div className={`${dotClasses} rounded-full bg-green-600`}></div>
         </div>
       );
     }
     if (type === 'egg') {
       return (
-        <div className={`${sizeClasses} border-2 border-yellow-600 rounded flex items-center justify-center`}>
+        <div className={`${sizeClasses} border-2 border-yellow-600 ${borderRadius} flex items-center justify-center`}>
           <div className={`${dotClasses} rounded-full bg-yellow-600`}></div>
         </div>
       );
     }
     if (type === 'non-veg') {
       return (
-        <div className={`${sizeClasses} border-2 border-red-600 rounded flex items-center justify-center`}>
+        <div className={`${sizeClasses} border-2 border-red-600 ${borderRadius} flex items-center justify-center`}>
           <div className={`${dotClasses} rounded-full bg-red-600`}></div>
         </div>
       );
@@ -219,16 +233,16 @@ export default function OrderingInterface({
             className="flex items-center gap-2 sm:gap-3"
           >
             <div
-              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-colors ${
+              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-lg transition-colors ${
                 selectedFilters.has('veg') ? 'bg-green-600' : 'bg-gray-300'
               }`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
+                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-md transition-transform flex items-center justify-center ${
                   selectedFilters.has('veg') ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
-                <FoodTypeIcon type="veg" />
+                <FoodTypeIcon type="veg" size="toggle" />
               </div>
             </div>
             <span className="text-xs sm:text-sm font-medium text-gray-700">Veg</span>
@@ -240,16 +254,16 @@ export default function OrderingInterface({
             className="flex items-center gap-2 sm:gap-3"
           >
             <div
-              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-colors ${
+              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-lg transition-colors ${
                 selectedFilters.has('egg') ? 'bg-yellow-600' : 'bg-gray-300'
               }`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
+                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-md transition-transform flex items-center justify-center ${
                   selectedFilters.has('egg') ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
-                <FoodTypeIcon type="egg" />
+                <FoodTypeIcon type="egg" size="toggle" />
               </div>
             </div>
             <span className="text-xs sm:text-sm font-medium text-gray-700">Egg</span>
@@ -261,16 +275,16 @@ export default function OrderingInterface({
             className="flex items-center gap-2 sm:gap-3"
           >
             <div
-              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-full transition-colors ${
+              className={`relative w-10 sm:w-11 h-5 sm:h-6 rounded-lg transition-colors ${
                 selectedFilters.has('non-veg') ? 'bg-red-600' : 'bg-gray-300'
               }`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-full transition-transform flex items-center justify-center ${
+                className={`absolute top-0.5 left-0.5 w-4 sm:w-5 h-4 sm:h-5 bg-white rounded-md transition-transform flex items-center justify-center ${
                   selectedFilters.has('non-veg') ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
-                <FoodTypeIcon type="non-veg" />
+                <FoodTypeIcon type="non-veg" size="toggle" />
               </div>
             </div>
             <span className="text-xs sm:text-sm font-medium text-gray-700">Non-Veg</span>
