@@ -9,8 +9,10 @@ type Table = {
   tableNumber: string;
   qrCode: string;
   isActive: boolean | null;
-  lastLoginAt?: string | null;
-  createdAt?: string | null;
+  capacity: number | null;
+  restaurantId: string;
+  lastLoginAt?: Date | null;
+  createdAt: Date | null;
 };
 
 export default function TablesClient({
