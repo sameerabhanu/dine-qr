@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { verifyRestaurantApiAuth } from '@/lib/api-auth';
 import { db } from '@/lib/db';
-import { menuItems, restaurants } from '@/lib/db/schema';
+import { menuItems } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export async function GET(
@@ -11,14 +11,9 @@ export async function GET(
   try {
     const { slug, id } = await context.params;
 
-    const [restaurant] = await db
-      .select()
-      .from(restaurants)
-      .where(eq(restaurants.slug, slug))
-      .limit(1);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
+    const authResult = await verifyRestaurantApiAuth(slug);
+    if (!authResult.authorized || !authResult.restaurant) {
+      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
     }
 
     const [item] = await db
@@ -26,7 +21,7 @@ export async function GET(
       .from(menuItems)
       .where(and(
         eq(menuItems.id, id),
-        eq(menuItems.restaurantId, restaurant.id)
+        eq(menuItems.restaurantId, authResult.restaurant.id)
       ))
       .limit(1);
 
@@ -47,28 +42,11 @@ export async function PATCH(
   context: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const session = await auth();
     const { slug, id } = await context.params;
 
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const [restaurant] = await db
-      .select()
-      .from(restaurants)
-      .where(eq(restaurants.slug, slug))
-      .limit(1);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
-    }
-
-    if (
-      session.user.userType !== 'super_admin' &&
-      session.user.restaurantId !== restaurant.id
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await verifyRestaurantApiAuth(slug);
+    if (!authResult.authorized || !authResult.restaurant) {
+      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -101,7 +79,7 @@ export async function PATCH(
       })
       .where(and(
         eq(menuItems.id, id),
-        eq(menuItems.restaurantId, restaurant.id)
+        eq(menuItems.restaurantId, authResult.restaurant.id)
       ))
       .returning();
 
@@ -122,35 +100,18 @@ export async function DELETE(
   context: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
-    const session = await auth();
     const { slug, id } = await context.params;
 
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const [restaurant] = await db
-      .select()
-      .from(restaurants)
-      .where(eq(restaurants.slug, slug))
-      .limit(1);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
-    }
-
-    if (
-      session.user.userType !== 'super_admin' &&
-      session.user.restaurantId !== restaurant.id
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await verifyRestaurantApiAuth(slug);
+    if (!authResult.authorized || !authResult.restaurant) {
+      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
     }
 
     await db
       .delete(menuItems)
       .where(and(
         eq(menuItems.id, id),
-        eq(menuItems.restaurantId, restaurant.id)
+        eq(menuItems.restaurantId, authResult.restaurant.id)
       ));
 
     return NextResponse.json({ message: 'Menu item deleted successfully' });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { verifyRestaurantApiAuth } from '@/lib/api-auth';
 import { db } from '@/lib/db';
-import { menuItems, restaurants } from '@/lib/db/schema';
+import { menuItems } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
@@ -12,20 +12,15 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
-    const [restaurant] = await db
-      .select()
-      .from(restaurants)
-      .where(eq(restaurants.slug, slug))
-      .limit(1);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
+    const authResult = await verifyRestaurantApiAuth(slug);
+    if (!authResult.authorized || !authResult.restaurant) {
+      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
     }
 
     const allItems = await db
       .select()
       .from(menuItems)
-      .where(eq(menuItems.restaurantId, restaurant.id))
+      .where(eq(menuItems.restaurantId, authResult.restaurant.id))
       .orderBy(menuItems.displayOrder);
 
     return NextResponse.json({ items: allItems });
@@ -41,28 +36,11 @@ export async function POST(
   context: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const session = await auth();
     const { slug } = await context.params;
 
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const [restaurant] = await db
-      .select()
-      .from(restaurants)
-      .where(eq(restaurants.slug, slug))
-      .limit(1);
-
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
-    }
-
-    if (
-      session.user.userType !== 'super_admin' &&
-      session.user.restaurantId !== restaurant.id
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await verifyRestaurantApiAuth(slug);
+    if (!authResult.authorized || !authResult.restaurant) {
+      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -94,7 +72,7 @@ export async function POST(
       .insert(menuItems)
       .values({
         id: randomUUID(),
-        restaurantId: restaurant.id,
+        restaurantId: authResult.restaurant.id,
         categoryId,
         name,
         price: price.toString(),
