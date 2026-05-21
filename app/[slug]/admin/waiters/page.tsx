@@ -4,7 +4,8 @@ import { restaurants, staff } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { requireRestaurantAuth } from '@/lib/restaurant-auth';
 import Link from 'next/link';
-import { ArrowLeft, Plus, UserCheck, UserX } from 'lucide-react';
+import { ArrowLeft, Plus, UserCheck } from 'lucide-react';
+import WaitersClient from './WaitersClient';
 
 export default async function WaitersManagementPage({
   params,
@@ -75,73 +76,7 @@ export default async function WaitersManagementPage({
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px]">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      Name
-                    </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      PIN
-                    </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      Status
-                    </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap hidden md:table-cell">
-                      Last Login
-                    </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap hidden lg:table-cell">
-                      Created
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {waiters.map((waiter) => (
-                    <tr key={waiter.id} className="hover:bg-gray-50 transition">
-                      <td className="px-3 sm:px-6 py-3 sm:py-4">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-gray-700 font-semibold text-xs sm:text-base">
-                              {waiter.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <span className="font-medium text-gray-900 text-xs sm:text-base truncate">{waiter.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <span className="font-mono text-gray-900 text-xs sm:text-base">{waiter.accessCode}</span>
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        {waiter.isActive ? (
-                          <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                            <UserCheck className="w-3 h-3" />
-                            <span className="hidden sm:inline">Active</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-                            <UserX className="w-3 h-3" />
-                            <span className="hidden sm:inline">Inactive</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden md:table-cell">
-                        {waiter.lastLoginAt
-                          ? new Date(waiter.lastLoginAt).toLocaleString('en-IN')
-                          : 'Never'}
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden lg:table-cell">
-                        {waiter.createdAt
-                          ? new Date(waiter.createdAt).toLocaleDateString('en-IN')
-                          : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <WaitersClient initialWaiters={waiters} slug={slug} />
         )}
       </div>
     </div>

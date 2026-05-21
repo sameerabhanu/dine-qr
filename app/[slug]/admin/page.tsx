@@ -101,8 +101,8 @@ export default async function RestaurantAdminPage({
 
       {/* Main Content - Mobile Responsive */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Stats Grid - Mobile Responsive */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        {/* Stats Grid - Mobile Responsive - 2 Cards Side by Side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
@@ -119,20 +119,10 @@ export default async function RestaurantAdminPage({
                 <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Revenue</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Today&apos;s Revenue</p>
             <p className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {formatCurrency(totalRevenue)}
+              {formatCurrency(todayRevenue)}
             </p>
-          </div>
-
-          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" />
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Menu Items</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{menuItemsCount.count}</p>
           </div>
         </div>
 
