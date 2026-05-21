@@ -66,10 +66,25 @@ export default function WaiterDashboard({
           table: 'orders',
           filter: `restaurant_id=eq.${restaurant.id}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log('📥 New order created:', payload);
-          // Refresh the page to get the new order with all its data
-          router.refresh();
+          const newOrder = payload.new as any;
+          
+          // Fetch the complete order with table and items data
+          try {
+            const response = await fetch(`/api/${slug}/orders/${newOrder.id}/details`);
+            if (response.ok) {
+              const data = await response.json();
+              // Add to pending orders instantly
+              setPendingOrders(prev => [data.order, ...prev]);
+            } else {
+              // Fallback to router refresh if API fails
+              router.refresh();
+            }
+          } catch (error) {
+            console.error('Failed to fetch new order details:', error);
+            router.refresh();
+          }
         }
       )
       .on(
@@ -84,15 +99,31 @@ export default function WaiterDashboard({
           console.log('📝 Order updated:', payload);
           const updatedOrder = payload.new as any;
           
-          // Handle order claim by another waiter
-          if (updatedOrder.waiter_id && updatedOrder.waiter_id !== waiter.id && updatedOrder.status === 'preparing') {
-            // Remove from pending orders
+          // Handle order claim by ANY waiter (including self)
+          if (updatedOrder.status === 'preparing' || updatedOrder.status === 'claimed') {
+            // Remove from pending orders for ALL waiters
             setPendingOrders(prev => prev.filter(o => o.order.id !== updatedOrder.id));
+            
+            // If claimed by THIS waiter, fetch full order and add to myOrders
+            if (updatedOrder.waiter_id === waiter.id) {
+              fetch(`/api/${slug}/orders/${updatedOrder.id}/details`)
+                .then(res => res.json())
+                .then(data => {
+                  if (data.order) {
+                    setMyOrders(prev => {
+                      // Avoid duplicates
+                      if (prev.find(o => o.order.id === updatedOrder.id)) return prev;
+                      return [data.order, ...prev];
+                    });
+                  }
+                })
+                .catch(err => console.error('Failed to fetch claimed order:', err));
+            }
           }
           
-          // Handle order completion
+          // Handle order completion by ANY waiter
           if (updatedOrder.status === 'completed') {
-            // Remove from my orders if completed
+            // Remove from my orders and pending orders for ALL waiters
             setMyOrders(prev => prev.filter(o => o.order.id !== updatedOrder.id));
             setPendingOrders(prev => prev.filter(o => o.order.id !== updatedOrder.id));
           }
@@ -112,7 +143,7 @@ export default function WaiterDashboard({
       console.log('🔌 Cleaning up Realtime subscription');
       ordersChannel.unsubscribe();
     };
-  }, [restaurant.id, waiter.id, router]);
+  }, [restaurant.id, waiter.id, router, slug]);
 
   const handleLogout = async () => {
     try {
@@ -130,18 +161,6 @@ export default function WaiterDashboard({
     setClaimingId(orderId);
     setError('');
 
-    // OPTIMISTIC UPDATE - Remove immediately from UI
-    const orderToMove = pendingOrders.find(o => o.order.id === orderId);
-    setPendingOrders(prev => prev.filter(o => o.order.id !== orderId));
-    
-    // Add to my orders optimistically
-    if (orderToMove) {
-      setMyOrders(prev => [{
-        ...orderToMove,
-        order: { ...orderToMove.order, status: 'claimed', claimedAt: new Date() }
-      }, ...prev]);
-    }
-
     try {
       const response = await fetch(`/api/${slug}/orders/${orderId}/claim`, {
         method: 'POST',
@@ -150,12 +169,6 @@ export default function WaiterDashboard({
       const data = await response.json();
 
       if (!response.ok) {
-        // ROLLBACK on error
-        if (orderToMove) {
-          setPendingOrders(prev => [...prev, orderToMove]);
-          setMyOrders(prev => prev.filter(o => o.order.id !== orderId));
-        }
-        
         if (response.status === 409) {
           setError('This order was just claimed by another waiter');
         } else {
@@ -165,13 +178,8 @@ export default function WaiterDashboard({
         return;
       }
 
-      // Success - polling will sync any differences
+      // Success - Realtime will handle the UI update instantly
     } catch (err) {
-      // ROLLBACK on error
-      if (orderToMove) {
-        setPendingOrders(prev => [...prev, orderToMove]);
-        setMyOrders(prev => prev.filter(o => o.order.id !== orderId));
-      }
       setError('Network error. Please try again.');
     } finally {
       setClaimingId(null);
@@ -195,9 +203,6 @@ export default function WaiterDashboard({
   const handleCompleteOrder = async (orderId: string, paymentMethod: string) => {
     setCompletingId(orderId);
     setError('');
-
-    // OPTIMISTIC UPDATE - Remove immediately from UI
-    setMyOrders(prev => prev.filter(o => o.order.id !== orderId));
     setShowInvoice(null);
 
     try {
@@ -210,15 +215,13 @@ export default function WaiterDashboard({
       const data = await response.json();
 
       if (!response.ok) {
-        // ROLLBACK on error - polling will restore the order
         setError(data.error || 'Failed to complete order');
         setCompletingId(null);
         return;
       }
 
-      // Success - polling will keep state in sync
+      // Success - Realtime will handle the UI update instantly
     } catch (err) {
-      // ROLLBACK on error - polling will restore the order
       setError('Network error. Please try again.');
     } finally {
       setCompletingId(null);
