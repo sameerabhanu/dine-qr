@@ -31,7 +31,12 @@ export default async function MenuManagementPage({
 
   const menuByCategory = allCategories.map(category => ({
     ...category,
-    items: allItems.filter(item => item.categoryId === category.id),
+    items: allItems
+      .filter(item => item.categoryId === category.id)
+      .map(item => ({
+        ...item,
+        foodType: item.foodType as 'veg' | 'egg' | 'non-veg',
+      })),
   }));
 
   return (
