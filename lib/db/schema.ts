@@ -175,9 +175,9 @@ export const staff = pgTable('staff', {
   restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
   
   name: varchar('name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }),
-  passwordHash: varchar('password_hash', { length: 255 }),
-  accessCode: varchar('access_code', { length: 4 }),
+  email: varchar('email', { length: 255 }), // Nullable - not required for access code auth
+  passwordHash: varchar('password_hash', { length: 255 }), // Nullable - not required for access code auth
+  accessCode: varchar('access_code', { length: 4 }), // 4-digit PIN for quick login
   role: varchar('role', { length: 50 }).notNull(), // owner, admin, kitchen, waiter
   
   isActive: boolean('is_active').default(true),

@@ -29,6 +29,10 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP;
 -- 4.5. Add access_code column to staff table (if missing)
 ALTER TABLE staff ADD COLUMN IF NOT EXISTS access_code VARCHAR(4);
 
+-- 4.6. Make email and password_hash nullable (for access code authentication)
+ALTER TABLE staff ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE staff ALTER COLUMN password_hash DROP NOT NULL;
+
 -- 5. Enable Row Level Security (required for Supabase Realtime)
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
