@@ -52,10 +52,11 @@ export default function MenuItemsList({
   slug: string;
 }) {
   const router = useRouter();
+  const [localCategories, setLocalCategories] = useState(categories);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ name: string; price: string }>({ name: '', price: '' });
   const [loading, setLoading] = useState(false);
-  const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
+  const [toggleLoadingIds, setToggleLoadingIds] = useState<Set<string>>(new Set());
   
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -89,8 +90,14 @@ export default function MenuItemsList({
       });
 
       if (response.ok) {
+        // Update local state to maintain order
+        setLocalCategories(localCategories.map(cat => ({
+          ...cat,
+          items: cat.items.map(item =>
+            item.id === itemId ? { ...item, name: editData.name, price: editData.price } : item
+          ),
+        })));
         setEditingId(null);
-        router.refresh();
       } else {
         const error = await response.json();
         alert(`Failed to update item: ${error.error || 'Unknown error'}`);
@@ -104,7 +111,9 @@ export default function MenuItemsList({
   };
 
   const handleToggleAvailability = async (itemId: string, currentStatus: boolean) => {
-    setToggleLoadingId(itemId);
+    // Add to loading set
+    setToggleLoadingIds(prev => new Set(prev).add(itemId));
+    
     try {
       const response = await fetch(`/api/${slug}/menu/items/${itemId}`, {
         method: 'PATCH',
@@ -116,7 +125,13 @@ export default function MenuItemsList({
       });
 
       if (response.ok) {
-        router.refresh();
+        // Update local state to maintain order
+        setLocalCategories(localCategories.map(cat => ({
+          ...cat,
+          items: cat.items.map(item =>
+            item.id === itemId ? { ...item, isAvailable: !currentStatus } : item
+          ),
+        })));
       } else {
         const error = await response.json();
         alert(`Failed to toggle availability: ${error.error || 'Unknown error'}`);
@@ -125,7 +140,12 @@ export default function MenuItemsList({
       console.error('Error toggling availability:', error);
       alert('Error toggling availability');
     } finally {
-      setToggleLoadingId(null);
+      // Remove from loading set
+      setToggleLoadingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
     }
   };
 
@@ -143,8 +163,12 @@ export default function MenuItemsList({
           });
 
           if (response.ok) {
+            // Update local state to remove the item
+            setLocalCategories(localCategories.map(cat => ({
+              ...cat,
+              items: cat.items.filter(item => item.id !== itemId),
+            })));
             setConfirmDialog({ ...confirmDialog, isOpen: false });
-            router.refresh();
           } else {
             const error = await response.json();
             alert(`Failed to delete item: ${error.error || 'Unknown error'}`);
@@ -173,8 +197,9 @@ export default function MenuItemsList({
           });
 
           if (response.ok) {
+            // Update local state to remove the category
+            setLocalCategories(localCategories.filter(cat => cat.id !== categoryId));
             setConfirmDialog({ ...confirmDialog, isOpen: false });
-            router.refresh();
           } else {
             const error = await response.json();
             alert(`Failed to delete category: ${error.error || 'Unknown error'}`);
@@ -191,13 +216,13 @@ export default function MenuItemsList({
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {categories.map(category => (
+      {localCategories.map(category => (
         <div key={category.id} className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
           <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-base sm:text-lg font-bold text-gray-900">{category.name}</h2>
             <button
               onClick={() => handleDeleteCategory(category.id, category.name)}
-              className="p-1.5 sm:p-2 hover:bg-red-100 rounded-lg transition text-red-600"
+              className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg transition text-gray-900"
               title="Delete Category"
             >
               <Trash2 className="w-4 h-4" />
@@ -253,9 +278,9 @@ export default function MenuItemsList({
                       className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                         item.isAvailable ? 'bg-green-600' : 'bg-gray-200'
                       }`}
-                      disabled={editingId === item.id || toggleLoadingId === item.id}
+                      disabled={editingId === item.id || toggleLoadingIds.has(item.id)}
                     >
-                      {toggleLoadingId === item.id ? (
+                      {toggleLoadingIds.has(item.id) ? (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <LoadingSpinner size="sm" className="border-white border-t-transparent" />
                         </div>
@@ -305,7 +330,7 @@ export default function MenuItemsList({
                     {/* Delete */}
                     <button
                       onClick={() => handleDeleteItem(item.id, item.name)}
-                      className="p-1 sm:p-1.5 hover:bg-red-100 rounded-lg transition text-red-600 flex-shrink-0"
+                      className="p-1 sm:p-1.5 hover:bg-gray-200 rounded-lg transition text-gray-900 flex-shrink-0"
                       title="Delete"
                       disabled={editingId === item.id}
                     >

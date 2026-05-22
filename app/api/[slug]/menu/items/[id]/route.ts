@@ -107,6 +107,13 @@ export async function DELETE(
       return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
     }
 
+    // Delete all order_items that reference this menu item
+    const { orderItems } = await import('@/lib/db/schema');
+    await db
+      .delete(orderItems)
+      .where(eq(orderItems.menuItemId, id));
+
+    // Now delete the menu item
     await db
       .delete(menuItems)
       .where(and(

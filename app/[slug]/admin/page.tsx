@@ -185,9 +185,6 @@ export default async function RestaurantAdminPage({
                     <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                       Status
                     </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      Time
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -218,12 +215,6 @@ export default async function RestaurantAdminPage({
                         >
                           {order.status}
                         </span>
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                        {order.createdAt ? new Date(order.createdAt).toLocaleTimeString('en-IN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        }) : '-'}
                       </td>
                     </tr>
                   ))}

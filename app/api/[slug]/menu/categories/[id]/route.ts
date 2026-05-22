@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyRestaurantApiAuth } from '@/lib/api-auth';
 import { db } from '@/lib/db';
 import { categories, menuItems } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
@@ -88,6 +88,25 @@ export async function DELETE(
       return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
     }
 
+    // Get all menu items in this category
+    const itemsInCategory = await db
+      .select({ id: menuItems.id })
+      .from(menuItems)
+      .where(and(
+        eq(menuItems.categoryId, id),
+        eq(menuItems.restaurantId, authResult.restaurant.id)
+      ));
+
+    // Delete all order_items that reference these menu items
+    if (itemsInCategory.length > 0) {
+      const { orderItems } = await import('@/lib/db/schema');
+      const itemIds = itemsInCategory.map(item => item.id);
+      await db
+        .delete(orderItems)
+        .where(inArray(orderItems.menuItemId, itemIds));
+    }
+
+    // Delete all menu items in this category
     await db
       .delete(menuItems)
       .where(and(
@@ -95,6 +114,7 @@ export async function DELETE(
         eq(menuItems.restaurantId, authResult.restaurant.id)
       ));
 
+    // Delete the category
     await db
       .delete(categories)
       .where(and(

@@ -34,6 +34,9 @@ export async function POST(
       ? (parseInt(existingTables[0].tableNumber) + 1).toString()
       : '1';
 
+    // Generate unique QR code identifier (not the full URL)
+    const qrCodeId = `${slug}-table-${nextTableNumber}-${randomUUID().substring(0, 8)}`;
+
     // Create new table
     const [newTable] = await db
       .insert(tables)
@@ -41,7 +44,7 @@ export async function POST(
         id: randomUUID(),
         restaurantId: restaurant.id,
         tableNumber: nextTableNumber,
-        qrCode: randomUUID(),
+        qrCode: qrCodeId,
         isActive: true,
       })
       .returning();
