@@ -44,7 +44,7 @@ export default function ConfirmDialog({
 
         {/* Content */}
         <div className="px-6 py-6">
-          <p className="text-gray-700 text-sm leading-relaxed">{message}</p>
+          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{message}</p>
         </div>
 
         {/* Actions */}

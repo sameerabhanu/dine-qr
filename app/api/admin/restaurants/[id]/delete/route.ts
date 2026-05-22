@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { restaurants, staff, tables, categories, menuItems, orders, orderItems, subscriptions, payments } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 export async function DELETE(
   request: NextRequest,
@@ -18,33 +18,42 @@ export async function DELETE(
     const { id } = await context.params;
 
     // Delete in correct order to handle foreign key constraints
-    // 1. Delete order items first
-    await db.delete(orderItems).where(
-      eq(orderItems.orderId, db.select({ id: orders.id }).from(orders).where(eq(orders.restaurantId, id)) as any)
-    );
+    
+    // 1. Get all orders for this restaurant
+    const restaurantOrders = await db
+      .select({ id: orders.id })
+      .from(orders)
+      .where(eq(orders.restaurantId, id));
+    
+    const orderIds = restaurantOrders.map(o => o.id);
 
-    // 2. Delete orders
+    // 2. Delete order items for these orders
+    if (orderIds.length > 0) {
+      await db.delete(orderItems).where(inArray(orderItems.orderId, orderIds));
+    }
+
+    // 3. Delete orders
     await db.delete(orders).where(eq(orders.restaurantId, id));
 
-    // 3. Delete menu items
+    // 4. Delete menu items
     await db.delete(menuItems).where(eq(menuItems.restaurantId, id));
 
-    // 4. Delete categories
+    // 5. Delete categories
     await db.delete(categories).where(eq(categories.restaurantId, id));
 
-    // 5. Delete tables
+    // 6. Delete tables
     await db.delete(tables).where(eq(tables.restaurantId, id));
 
-    // 6. Delete payments
+    // 7. Delete payments
     await db.delete(payments).where(eq(payments.restaurantId, id));
 
-    // 7. Delete subscriptions
+    // 8. Delete subscriptions
     await db.delete(subscriptions).where(eq(subscriptions.restaurantId, id));
 
-    // 8. Delete staff
+    // 9. Delete staff
     await db.delete(staff).where(eq(staff.restaurantId, id));
 
-    // 9. Finally delete restaurant
+    // 10. Finally delete restaurant
     await db.delete(restaurants).where(eq(restaurants.id, id));
 
     return NextResponse.json({ success: true, message: 'Restaurant deleted successfully' });

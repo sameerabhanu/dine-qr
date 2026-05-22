@@ -161,12 +161,12 @@ export default async function AdminDashboardPage() {
                         year: 'numeric'
                       })}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-3">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-4">
                         <Link
                           href={`/${restaurant.slug}`}
                           target="_blank"
-                          className="text-sm font-medium text-gray-600 hover:text-black transition inline-flex items-center gap-1"
+                          className="text-gray-900 hover:text-blue-600 transition"
                           title="View restaurant page"
                         >
                           <Eye className="w-4 h-4" />

@@ -3,6 +3,8 @@
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function DeleteRestaurantButton({ 
   restaurantId, 
@@ -13,12 +15,9 @@ export default function DeleteRestaurantButton({
 }) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${restaurantName}"? This action cannot be undone and will delete all associated data (orders, menu items, staff, etc.).`)) {
-      return;
-    }
-
     setIsDeleting(true);
     
     try {
@@ -27,7 +26,7 @@ export default function DeleteRestaurantButton({
       });
 
       if (response.ok) {
-        alert('Restaurant deleted successfully!');
+        setShowConfirm(false);
         router.refresh();
       } else {
         const data = await response.json();
@@ -42,14 +41,26 @@ export default function DeleteRestaurantButton({
   };
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={isDeleting}
-      className="text-sm font-medium text-red-600 hover:text-red-700 transition inline-flex items-center gap-1 disabled:opacity-50"
-      title="Delete restaurant"
-    >
-      <Trash2 className="w-4 h-4" />
-      {isDeleting && <span className="text-xs">(Deleting...)</span>}
-    </button>
+    <>
+      <button
+        onClick={() => setShowConfirm(true)}
+        className="text-gray-900 hover:text-red-600 transition"
+        title="Delete restaurant"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title="Delete Restaurant"
+        message={`Are you sure you want to delete "${restaurantName}"?\n\nThis will permanently delete:\n• All orders and order history\n• Menu items and categories\n• Staff accounts and waiters\n• Tables and QR codes\n• Subscription data\n\nThis action cannot be undone.`}
+        confirmText="Delete Restaurant"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setShowConfirm(false)}
+        loading={isDeleting}
+      />
+    </>
   );
 }

@@ -40,6 +40,7 @@ export default function RestaurantLoginPage({
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ accessCode }),
       });
 
@@ -51,10 +52,10 @@ export default function RestaurantLoginPage({
         return;
       }
 
-      // Access code is valid, redirect to admin
+      // Access code is valid, redirect to admin with full page reload
+      // This ensures cookies are properly set before navigation
       const redirect = searchParams?.get('redirect') || `/${slug}/admin`;
-      router.push(redirect);
-      router.refresh();
+      window.location.href = redirect;
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
