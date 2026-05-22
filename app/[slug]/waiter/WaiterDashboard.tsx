@@ -83,10 +83,14 @@ export default function WaiterDashboard({
 
   // Play notification sound
   const playNotificationSound = () => {
-    if (!soundEnabled || !audioContextRef.current) return;
+    if (!soundEnabled || !audioContextRef.current) {
+      console.log('🔇 Sound blocked:', { soundEnabled, hasAudioContext: !!audioContextRef.current });
+      return;
+    }
 
     try {
       const ctx = audioContextRef.current;
+      console.log('🔊 Playing notification sound');
       
       // Resume context if suspended (critical for mobile)
       if (ctx.state === 'suspended') {
@@ -164,6 +168,7 @@ export default function WaiterDashboard({
               setPendingOrders(prev => [data.order, ...prev]);
               
               // Play notification sound for new order
+              console.log('🔔 Attempting to play notification for new order');
               playNotificationSound();
             } else {
               // Fallback to router refresh if API fails
@@ -350,9 +355,12 @@ export default function WaiterDashboard({
                     audioContextRef.current.resume().then(() => {
                       setAudioReady(true);
                       setSoundEnabled(!soundEnabled);
+                      console.log('🔊 Sound toggled (after resume):', !soundEnabled);
                     });
                   } else {
-                    setSoundEnabled(!soundEnabled);
+                    const newState = !soundEnabled;
+                    setSoundEnabled(newState);
+                    console.log('🔊 Sound toggled:', newState);
                   }
                 }}
                 className={`p-1.5 sm:p-2 rounded-lg transition flex-shrink-0 ${
