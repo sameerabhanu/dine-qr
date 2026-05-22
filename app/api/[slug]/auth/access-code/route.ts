@@ -60,39 +60,13 @@ export async function POST(
       .set({ lastLoginAt: new Date() })
       .where(eq(staff.id, staffMember.id));
 
-    // Set a secure cookie for authentication with SHORT expiration for security
-    const cookieStore = await cookies();
     const cookieName = `restaurant_${slug}_auth`;
-    const cookieValue = staffMember.id;
+    const activityCookieName = `restaurant_${slug}_activity`;
     
-    console.log('🍪 Setting cookie:', {
-      name: cookieName,
-      value: cookieValue,
-      path: `/${slug}`,
-      maxAge: 60 * 60 * 2, // 2 hours for security
-    });
+    console.log('🍪 Setting cookies via NextResponse');
 
-    // Set auth cookie
-    cookieStore.set(cookieName, cookieValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 2, // 2 hours only - require re-login for security
-      path: '/',
-    });
-
-    // Set activity timestamp cookie for inactivity tracking
-    cookieStore.set(`restaurant_${slug}_activity`, Date.now().toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 2,
-      path: '/',
-    });
-
-    console.log('✅ Cookie set successfully');
-
-    return NextResponse.json({
+    // Create response with cookies set properly in headers
+    const response = NextResponse.json({
       success: true,
       staff: {
         id: staffMember.id,
@@ -101,6 +75,28 @@ export async function POST(
         restaurantId: staffMember.restaurantId,
       },
     });
+
+    // Set auth cookie in response
+    response.cookies.set(cookieName, staffMember.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2, // 2 hours
+      path: '/',
+    });
+
+    // Set activity timestamp cookie
+    response.cookies.set(activityCookieName, Date.now().toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2,
+      path: '/',
+    });
+
+    console.log('✅ Cookies set in response headers');
+
+    return response;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
     console.error('Access code auth error:', error);
