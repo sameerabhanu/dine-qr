@@ -28,13 +28,13 @@ export default function AdminLoginPage() {
 
       if (result?.error) {
         setError('Invalid email or password');
+        setLoading(false);
       } else {
-        router.push('/admin');
-        router.refresh();
+        // Use window.location.href for full page reload to ensure session is set
+        window.location.href = '/admin';
       }
     } catch {
       setError('An error occurred. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
