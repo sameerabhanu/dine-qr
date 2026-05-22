@@ -86,6 +86,8 @@ export async function getRestaurantAuth(slug: string) {
  * Note: This function will redirect and never return if unauthorized
  */
 export async function requireRestaurantAuth(slug: string, redirectPath?: string) {
+  console.log('🔍 requireRestaurantAuth called for slug:', slug);
+  
   // Fetch restaurant
   const [restaurant] = await db
     .select()
@@ -93,13 +95,21 @@ export async function requireRestaurantAuth(slug: string, redirectPath?: string)
     .where(eq(restaurants.slug, slug))
     .limit(1);
 
+  console.log('🏪 Restaurant found:', {
+    id: restaurant?.id,
+    name: restaurant?.name,
+    subscriptionStatus: restaurant?.subscriptionStatus,
+  });
+
   if (!restaurant) {
-    // Restaurant not found - this will throw and never return
+    console.error('❌ Restaurant not found');
     throw new Error('Restaurant not found');
   }
 
   // Check if restaurant is suspended or inactive (only if field exists)
   const status = restaurant.subscriptionStatus || 'active'; // Default to active if not set
+  console.log('📊 Subscription status:', status);
+  
   if (status === 'suspended' || status === 'inactive') {
     console.log('🚫 Restaurant is suspended/inactive - blocking access');
     // Clear auth cookies
@@ -120,9 +130,10 @@ export async function requireRestaurantAuth(slug: string, redirectPath?: string)
     slug,
     hasRestaurantAuth: !!restaurantAuth,
     restaurantAuthId: restaurantAuth?.restaurantId,
+    restaurantAuthStaffId: restaurantAuth?.id,
     hasSession: !!session,
-    sessionUserType: session?.user.userType,
-    sessionRestaurantId: session?.user.restaurantId,
+    sessionUserType: session?.user?.userType,
+    sessionRestaurantId: session?.user?.restaurantId,
     targetRestaurantId: restaurant.id,
   });
 
@@ -133,12 +144,19 @@ export async function requireRestaurantAuth(slug: string, redirectPath?: string)
     session?.user.restaurantId === restaurant.id;
 
   console.log('🔐 Authorization result:', isAuthorized);
+  console.log('🔐 Authorization check details:', {
+    'restaurantAuth?.restaurantId === restaurant.id': restaurantAuth?.restaurantId === restaurant.id,
+    'session?.user.userType === super_admin': session?.user.userType === 'super_admin',
+    'session?.user.restaurantId === restaurant.id': session?.user.restaurantId === restaurant.id,
+  });
 
   if (!isAuthorized) {
     const redirect_url = redirectPath || `/${slug}/admin`;
-    console.log('🔐 Redirecting to login page');
+    console.log('❌ NOT AUTHORIZED - Redirecting to login page');
     redirect(`/${slug}/login?redirect=${redirect_url}`);
   }
+
+  console.log('✅ AUTHORIZED - Allowing access');
 
   // This return is only reached if authorized and restaurant exists
   return { 
