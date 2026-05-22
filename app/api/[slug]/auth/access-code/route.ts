@@ -60,7 +60,7 @@ export async function POST(
       .set({ lastLoginAt: new Date() })
       .where(eq(staff.id, staffMember.id));
 
-    // Set a secure cookie for authentication
+    // Set a secure cookie for authentication with SHORT expiration for security
     const cookieStore = await cookies();
     const cookieName = `restaurant_${slug}_auth`;
     const cookieValue = staffMember.id;
@@ -69,15 +69,25 @@ export async function POST(
       name: cookieName,
       value: cookieValue,
       path: `/${slug}`,
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 2, // 2 hours for security
     });
 
+    // Set auth cookie
     cookieStore.set(cookieName, cookieValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',  // Changed from /${slug} to / for broader access
+      maxAge: 60 * 60 * 2, // 2 hours only - require re-login for security
+      path: '/',
+    });
+
+    // Set activity timestamp cookie for inactivity tracking
+    cookieStore.set(`restaurant_${slug}_activity`, Date.now().toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2,
+      path: '/',
     });
 
     console.log('✅ Cookie set successfully');

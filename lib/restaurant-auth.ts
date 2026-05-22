@@ -13,17 +13,42 @@ export async function getRestaurantAuth(slug: string) {
   try {
     const cookieStore = await cookies();
     const authCookie = cookieStore.get(`restaurant_${slug}_auth`);
+    const lastActivityCookie = cookieStore.get(`restaurant_${slug}_activity`);
 
     console.log('🍪 Cookie check:', {
       slug,
       cookieName: `restaurant_${slug}_auth`,
       hasCookie: !!authCookie,
       cookieValue: authCookie?.value,
+      lastActivity: lastActivityCookie?.value,
     });
 
     if (!authCookie) {
       return null;
     }
+
+    // Check for inactivity timeout (30 minutes)
+    if (lastActivityCookie) {
+      const lastActivity = parseInt(lastActivityCookie.value);
+      const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
+      
+      if (lastActivity < thirtyMinutesAgo) {
+        console.log('🔒 Session expired due to inactivity');
+        // Clear cookies
+        cookieStore.delete(`restaurant_${slug}_auth`);
+        cookieStore.delete(`restaurant_${slug}_activity`);
+        return null;
+      }
+    }
+
+    // Update last activity timestamp
+    cookieStore.set(`restaurant_${slug}_activity`, Date.now().toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2, // Match auth cookie expiration
+      path: '/',
+    });
 
     const staffId = authCookie.value;
 
@@ -119,6 +144,7 @@ export async function logoutRestaurant(slug: string) {
   try {
     const cookieStore = await cookies();
     cookieStore.delete(`restaurant_${slug}_auth`);
+    cookieStore.delete(`restaurant_${slug}_activity`);
     return true;
   } catch (error) {
     console.error('Logout error:', error);

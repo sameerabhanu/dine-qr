@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Clock, LogOut, AlertCircle, CheckCircle, Loader2, ShoppingBag, QrCode, User, X } from 'lucide-react';
+import { Clock, LogOut, AlertCircle, CheckCircle, Loader2, ShoppingBag, QrCode, User, X, Volume2, VolumeX } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -44,6 +44,91 @@ export default function WaiterDashboard({
   const [invoiceData, setInvoiceData] = useState<any>(null);
   const [error, setError] = useState('');
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [audioReady, setAudioReady] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Initialize Audio Context - more aggressive for mobile
+  useEffect(() => {
+    const initAudio = () => {
+      if (!audioContextRef.current) {
+        try {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+          // Resume context immediately (needed for iOS Safari)
+          if (audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume().then(() => {
+              setAudioReady(true);
+            });
+          } else {
+            setAudioReady(true);
+          }
+        } catch (error) {
+          console.error('Error initializing audio:', error);
+        }
+      }
+    };
+
+    // Initialize on multiple user interaction types for mobile compatibility
+    const events = ['click', 'touchstart', 'touchend'];
+    events.forEach(event => {
+      document.addEventListener(event, initAudio, { once: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, initAudio);
+      });
+    };
+  }, []);
+
+  // Play notification sound
+  const playNotificationSound = () => {
+    if (!soundEnabled || !audioContextRef.current) return;
+
+    try {
+      const ctx = audioContextRef.current;
+      
+      // Resume context if suspended (critical for mobile)
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          setAudioReady(true);
+          playBeeps(ctx);
+        });
+      } else {
+        playBeeps(ctx);
+      }
+    } catch (error) {
+      console.error('Error playing notification sound:', error);
+    }
+  };
+
+  const playBeeps = (ctx: AudioContext) => {
+    // Create a more attention-grabbing three-tone notification
+    const playBeep = (frequency: number, startTime: number, duration: number) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+
+      // Louder volume with smooth envelope
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.02); // Louder (0.5 instead of 0.3)
+      gainNode.gain.linearRampToValueAtTime(0.5, startTime + duration - 0.02);
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+
+    // Three ascending beeps - more noticeable
+    playBeep(600, ctx.currentTime, 0.12);           // Low
+    playBeep(800, ctx.currentTime + 0.15, 0.12);    // Mid
+    playBeep(1000, ctx.currentTime + 0.30, 0.15);   // High (slightly longer)
+  };
 
   // Update state when server data changes
   useEffect(() => {
@@ -77,6 +162,9 @@ export default function WaiterDashboard({
               const data = await response.json();
               // Add to pending orders instantly
               setPendingOrders(prev => [data.order, ...prev]);
+              
+              // Play notification sound for new order
+              playNotificationSound();
             } else {
               // Fallback to router refresh if API fails
               router.refresh();
@@ -254,19 +342,68 @@ export default function WaiterDashboard({
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition flex items-center gap-1.5 sm:gap-2 flex-shrink-0"
-              title="Logout"
-            >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline text-sm font-medium">Logout</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  // On mobile, clicking the button will also help initialize audio
+                  if (audioContextRef.current?.state === 'suspended') {
+                    audioContextRef.current.resume().then(() => {
+                      setAudioReady(true);
+                      setSoundEnabled(!soundEnabled);
+                    });
+                  } else {
+                    setSoundEnabled(!soundEnabled);
+                  }
+                }}
+                className={`p-1.5 sm:p-2 rounded-lg transition flex-shrink-0 ${
+                  soundEnabled && audioReady
+                    ? 'text-green-600 bg-green-50 hover:bg-green-100'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-100'
+                }`}
+                title={soundEnabled ? 'Mute notifications' : 'Unmute notifications'}
+              >
+                {soundEnabled ? (
+                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
+                )}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition flex items-center gap-1.5 sm:gap-2 flex-shrink-0"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline text-sm font-medium">Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+        {/* Audio Enable Banner - Show on mobile if audio not ready */}
+        {soundEnabled && !audioReady && (
+          <div 
+            onClick={() => {
+              if (audioContextRef.current) {
+                audioContextRef.current.resume().then(() => {
+                  setAudioReady(true);
+                  // Play test sound
+                  playNotificationSound();
+                });
+              }
+            }}
+            className="mb-4 sm:mb-6 bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 cursor-pointer hover:bg-blue-100 transition"
+          >
+            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs sm:text-sm text-blue-800 font-medium">Tap here to enable sound notifications</p>
+              <p className="text-xs text-blue-600 mt-0.5">You'll hear a beep when new orders arrive</p>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
             <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0" />
