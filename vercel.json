@@ -5,16 +5,12 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/update-subscription-status",
-      "schedule": "0 * * * *"
+      "path": "/api/cron/auto-suspend",
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/daily-subscription-report",
       "schedule": "30 3 * * *"
-    },
-    {
-      "path": "/api/cron/auto-suspend",
-      "schedule": "0 0 * * *"
     }
   ]
 }

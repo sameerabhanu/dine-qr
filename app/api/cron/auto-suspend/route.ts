@@ -3,8 +3,11 @@ import { updateAllSubscriptionStatuses } from '@/lib/subscription';
 import { sendSuspensionNotification } from '@/lib/email';
 
 /**
- * Cron Job: Auto-suspend restaurants past grace period
+ * Cron Job: Update subscription statuses and auto-suspend restaurants past grace period
  * Runs every day at midnight IST
+ * 
+ * NOTE: This combines status updates + auto-suspension for Vercel Hobby plan
+ * (which only allows daily cron jobs)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('🔄 Running auto-suspension cron job...');
+    console.log('🔄 Running daily subscription update + auto-suspension cron job...');
     
     // Update all statuses (this will auto-suspend restaurants past grace period)
     const result = await updateAllSubscriptionStatuses();
@@ -40,10 +43,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(`✅ Auto-suspension complete: ${result.newlySuspended?.length || 0} suspended`);
+    console.log(`✅ Daily update complete: ${result.updated} statuses updated, ${result.newlySuspended?.length || 0} suspended`);
     
     return NextResponse.json({
       success: true,
+      statusesUpdated: result.updated,
       suspended: result.newlySuspended?.length || 0,
       emailsSent: emailResults.filter(r => r.success).length,
       timestamp: new Date().toISOString(),
