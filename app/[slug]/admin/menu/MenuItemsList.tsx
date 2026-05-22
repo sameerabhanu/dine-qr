@@ -318,20 +318,19 @@ export default function MenuItemsList({
           )}
         </div>
       ))}
-    </div>
 
-    {/* Confirmation Dialog */}
-    <ConfirmDialog
-      isOpen={confirmDialog.isOpen}
-      title={confirmDialog.title}
-      message={confirmDialog.message}
-      confirmText="Delete"
-      cancelText="Cancel"
-      confirmVariant="danger"
-      onConfirm={confirmDialog.onConfirm}
-      onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-      loading={loading}
-    />
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        loading={loading}
+      />
     </div>
   );
 }
