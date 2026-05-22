@@ -92,8 +92,7 @@ export async function POST(
 
     console.log('✅ Cookie set successfully');
 
-    // Create response with explicit Set-Cookie headers
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
       staff: {
         id: staffMember.id,
@@ -102,25 +101,6 @@ export async function POST(
         restaurantId: staffMember.restaurantId,
       },
     });
-
-    // Also set cookies in the response headers for immediate effect
-    response.cookies.set(cookieName, cookieValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 2,
-      path: '/',
-    });
-
-    response.cookies.set(`restaurant_${slug}_activity`, Date.now().toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 2,
-      path: '/',
-    });
-
-    return response;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
     console.error('Access code auth error:', error);

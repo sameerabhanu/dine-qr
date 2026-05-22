@@ -59,11 +59,9 @@ export default function RestaurantLoginPage({
       }
 
       // Access code is valid, redirect to admin with full page reload
-      // Add small delay to ensure cookies are set before redirect
-      setTimeout(() => {
-        const redirect = searchParams?.get('redirect') || `/${slug}/admin`;
-        window.location.href = redirect;
-      }, 100);
+      // This ensures cookies are properly set before navigation
+      const redirect = searchParams?.get('redirect') || `/${slug}/admin`;
+      window.location.href = redirect;
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
