@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Download, Trash2, Plus } from 'lucide-react';
 import QRCode from 'qrcode';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 type Table = {
   id: string;
@@ -27,6 +29,20 @@ export default function TablesClient({
   const [tables, setTables] = useState(initialTables);
   const [isAdding, setIsAdding] = useState(false);
   const [newTableNumber, setNewTableNumber] = useState('');
+  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const handleDownloadQR = async (table: Table) => {
     try {
@@ -48,28 +64,35 @@ export default function TablesClient({
   };
 
   const handleDelete = async (tableId: string, tableNumber: string) => {
-    if (!confirm(`Are you sure you want to delete Table ${tableNumber}?`)) {
-      return;
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Table',
+      message: `Are you sure you want to delete Table ${tableNumber}? This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteLoadingId(tableId);
+        try {
+          const response = await fetch(`/api/${slug}/tables/${tableId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          });
 
-    try {
-      const response = await fetch(`/api/${slug}/tables/${tableId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        // Optimistic update
-        setTables(tables.filter(t => t.id !== tableId));
-        router.refresh();
-      } else {
-        const error = await response.json();
-        alert(`Failed to delete table: ${error.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error deleting table:', error);
-      alert('Error deleting table');
-    }
+          if (response.ok) {
+            // Optimistic update
+            setTables(tables.filter(t => t.id !== tableId));
+            setConfirmDialog({ ...confirmDialog, isOpen: false });
+            router.refresh();
+          } else {
+            const error = await response.json();
+            alert(`Failed to delete table: ${error.error || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Error deleting table:', error);
+          alert('Error deleting table');
+        } finally {
+          setDeleteLoadingId(null);
+        }
+      },
+    });
   };
 
   const handleAddTable = async () => {
@@ -123,8 +146,12 @@ export default function TablesClient({
             disabled={isAdding}
             className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
           >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Table</span>
+            {isAdding ? (
+              <LoadingSpinner size="sm" className="border-white border-t-transparent" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">{isAdding ? 'Adding...' : 'Add Table'}</span>
           </button>
         </div>
       </div>
@@ -165,10 +192,15 @@ export default function TablesClient({
                   {/* Delete Button */}
                   <button
                     onClick={() => handleDelete(table.id, table.tableNumber)}
-                    className="p-2 hover:bg-gray-200 rounded-lg transition text-gray-900 flex-shrink-0"
+                    disabled={deleteLoadingId === table.id}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition text-gray-900 flex-shrink-0 disabled:opacity-50 flex items-center justify-center"
                     title="Delete Table"
                   >
-                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {deleteLoadingId === table.id ? (
+                      <LoadingSpinner size="sm" className="border-gray-900 border-t-transparent" />
+                    ) : (
+                      <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -176,6 +208,19 @@ export default function TablesClient({
           </div>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        loading={deleteLoadingId !== null}
+      />
     </div>
   );
 }

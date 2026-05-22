@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil, Trash2, Check, X, User, UserCheck, UserX } from 'lucide-react';
+import { Pencil, Trash2, Check, X, User } from 'lucide-react';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 type Waiter = {
   id: string;
@@ -32,6 +34,20 @@ export default function WaitersClient({
     accessCode: '',
   });
   const [loading, setLoading] = useState(false);
+  const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const handleEdit = (waiter: Waiter) => {
     setEditingId(waiter.id);
@@ -73,6 +89,7 @@ export default function WaitersClient({
   };
 
   const handleToggleStatus = async (waiterId: string, currentStatus: boolean) => {
+    setToggleLoadingId(waiterId);
     try {
       const response = await fetch(`/api/${slug}/waiters/${waiterId}`, {
         method: 'PATCH',
@@ -98,32 +115,41 @@ export default function WaitersClient({
     } catch (error) {
       console.error('Error toggling status:', error);
       alert('Error toggling status');
+    } finally {
+      setToggleLoadingId(null);
     }
   };
 
   const handleDelete = async (waiterId: string, waiterName: string) => {
-    if (!confirm(`Are you sure you want to delete ${waiterName}?`)) {
-      return;
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Waiter',
+      message: `Are you sure you want to delete ${waiterName}? This action cannot be undone.`,
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/${slug}/waiters/${waiterId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          });
 
-    try {
-      const response = await fetch(`/api/${slug}/waiters/${waiterId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        // Optimistic update
-        setWaiters(waiters.filter(w => w.id !== waiterId));
-        router.refresh();
-      } else {
-        const error = await response.json();
-        alert(`Failed to delete waiter: ${error.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error deleting waiter:', error);
-      alert('Error deleting waiter');
-    }
+          if (response.ok) {
+            // Optimistic update
+            setWaiters(waiters.filter(w => w.id !== waiterId));
+            setConfirmDialog({ ...confirmDialog, isOpen: false });
+            router.refresh();
+          } else {
+            const error = await response.json();
+            alert(`Failed to delete waiter: ${error.error || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Error deleting waiter:', error);
+          alert('Error deleting waiter');
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   return (
@@ -174,14 +200,20 @@ export default function WaitersClient({
                 className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   waiter.isActive ?? true ? 'bg-green-600' : 'bg-gray-200'
                 }`}
-                disabled={editingId === waiter.id}
+                disabled={editingId === waiter.id || toggleLoadingId === waiter.id}
                 title={waiter.isActive ?? true ? 'Active' : 'Inactive'}
               >
-                <span
-                  className={`inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    waiter.isActive ?? true ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                {toggleLoadingId === waiter.id ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <LoadingSpinner size="sm" className="border-white border-t-transparent" />
+                  </div>
+                ) : (
+                  <span
+                    className={`inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      waiter.isActive ?? true ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                )}
               </button>
 
               {/* Edit / Save / Cancel */}
@@ -190,10 +222,14 @@ export default function WaitersClient({
                   <button
                     onClick={() => handleSave(waiter.id)}
                     disabled={loading}
-                    className="p-1 sm:p-1.5 hover:bg-green-100 rounded-lg transition text-green-600"
+                    className="p-1 sm:p-1.5 hover:bg-green-100 rounded-lg transition text-green-600 disabled:opacity-50 flex items-center justify-center"
                     title="Save"
                   >
-                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    {loading ? (
+                      <LoadingSpinner size="sm" className="border-green-600 border-t-transparent" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    )}
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
@@ -227,6 +263,19 @@ export default function WaitersClient({
           </div>
         ))}
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        loading={loading}
+      />
     </div>
   );
 }

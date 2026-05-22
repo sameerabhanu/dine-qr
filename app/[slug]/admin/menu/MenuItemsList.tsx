@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Pencil, Trash2, Check, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 type FoodType = 'veg' | 'egg' | 'non-veg';
 
@@ -53,6 +55,20 @@ export default function MenuItemsList({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ name: string; price: string }>({ name: '', price: '' });
   const [loading, setLoading] = useState(false);
+  const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const handleEdit = (item: MenuItem) => {
     setEditingId(item.id);
@@ -88,6 +104,7 @@ export default function MenuItemsList({
   };
 
   const handleToggleAvailability = async (itemId: string, currentStatus: boolean) => {
+    setToggleLoadingId(itemId);
     try {
       const response = await fetch(`/api/${slug}/menu/items/${itemId}`, {
         method: 'PATCH',
@@ -107,49 +124,69 @@ export default function MenuItemsList({
     } catch (error) {
       console.error('Error toggling availability:', error);
       alert('Error toggling availability');
+    } finally {
+      setToggleLoadingId(null);
     }
   };
 
   const handleDeleteItem = async (itemId: string, itemName: string) => {
-    if (!confirm(`Are you sure you want to delete "${itemName}"?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Menu Item',
+      message: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/${slug}/menu/items/${itemId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          });
 
-    try {
-      const response = await fetch(`/api/${slug}/menu/items/${itemId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        router.refresh();
-      } else {
-        const error = await response.json();
-        alert(`Failed to delete item: ${error.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      alert('Error deleting item');
-    }
+          if (response.ok) {
+            setConfirmDialog({ ...confirmDialog, isOpen: false });
+            router.refresh();
+          } else {
+            const error = await response.json();
+            alert(`Failed to delete item: ${error.error || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Error deleting item:', error);
+          alert('Error deleting item');
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
-    if (!confirm(`Are you sure you want to delete category "${categoryName}" and all its items?`)) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Category',
+      message: `Are you sure you want to delete category "${categoryName}" and all its items? This action cannot be undone.`,
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/${slug}/menu/categories/${categoryId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          });
 
-    try {
-      const response = await fetch(`/api/${slug}/menu/categories/${categoryId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        router.refresh();
-      } else {
-        const error = await response.json();
-        alert(`Failed to delete category: ${error.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      alert('Error deleting category');
-    }
+          if (response.ok) {
+            setConfirmDialog({ ...confirmDialog, isOpen: false });
+            router.refresh();
+          } else {
+            const error = await response.json();
+            alert(`Failed to delete category: ${error.error || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Error deleting category:', error);
+          alert('Error deleting category');
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   return (
@@ -216,13 +253,19 @@ export default function MenuItemsList({
                       className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                         item.isAvailable ? 'bg-green-600' : 'bg-gray-200'
                       }`}
-                      disabled={editingId === item.id}
+                      disabled={editingId === item.id || toggleLoadingId === item.id}
                     >
-                      <span
-                        className={`inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          item.isAvailable ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
+                      {toggleLoadingId === item.id ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <LoadingSpinner size="sm" className="border-white border-t-transparent" />
+                        </div>
+                      ) : (
+                        <span
+                          className={`inline-block h-4 w-4 sm:h-5 sm:w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            item.isAvailable ? 'translate-x-4 sm:translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      )}
                     </button>
 
                     {/* Edit / Save / Cancel */}
@@ -231,10 +274,14 @@ export default function MenuItemsList({
                         <button
                           onClick={() => handleSave(item.id)}
                           disabled={loading}
-                          className="p-1 sm:p-1.5 hover:bg-green-100 rounded-lg transition text-green-600"
+                          className="p-1 sm:p-1.5 hover:bg-green-100 rounded-lg transition text-green-600 disabled:opacity-50 flex items-center justify-center"
                           title="Save"
                         >
-                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          {loading ? (
+                            <LoadingSpinner size="sm" className="border-green-600 border-t-transparent" />
+                          ) : (
+                            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          )}
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
@@ -271,6 +318,20 @@ export default function MenuItemsList({
           )}
         </div>
       ))}
+    </div>
+
+    {/* Confirmation Dialog */}
+    <ConfirmDialog
+      isOpen={confirmDialog.isOpen}
+      title={confirmDialog.title}
+      message={confirmDialog.message}
+      confirmText="Delete"
+      cancelText="Cancel"
+      confirmVariant="danger"
+      onConfirm={confirmDialog.onConfirm}
+      onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+      loading={loading}
+    />
     </div>
   );
 }
