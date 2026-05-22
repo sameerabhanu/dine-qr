@@ -3,8 +3,9 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { restaurants, orders } from '@/lib/db/schema';
 import { count, gte, eq } from 'drizzle-orm';
-import { Store, ShoppingBag, Users, Plus, LogOut, Menu } from 'lucide-react';
+import { Store, ShoppingBag, Plus, LogOut, Menu, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import DeleteRestaurantButton from './DeleteRestaurantButton';
 
 export default async function AdminDashboardPage() {
   const session = await auth();
@@ -21,8 +22,6 @@ export default async function AdminDashboardPage() {
     .from(restaurants)
     .where(eq(restaurants.isActive, true));
 
-  const [totalOrders] = await db.select({ count: count() }).from(orders);
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -31,8 +30,8 @@ export default async function AdminDashboardPage() {
     .from(orders)
     .where(gte(orders.createdAt, today));
 
-  // Fetch recent restaurants
-  const recentRestaurants = await db
+  // Fetch all restaurants (not just recent)
+  const allRestaurants = await db
     .select({
       id: restaurants.id,
       name: restaurants.name,
@@ -42,8 +41,7 @@ export default async function AdminDashboardPage() {
       createdAt: restaurants.createdAt,
     })
     .from(restaurants)
-    .orderBy(restaurants.createdAt)
-    .limit(10);
+    .orderBy(restaurants.createdAt);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,7 +83,7 @@ export default async function AdminDashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <StatCard
             icon={<Store className="w-5 h-5" />}
             label="Total Restaurants"
@@ -94,15 +92,9 @@ export default async function AdminDashboardPage() {
           />
           <StatCard
             icon={<ShoppingBag className="w-5 h-5" />}
-            label="Total Orders"
-            value={totalOrders.count.toString()}
-            subValue={`${todayOrders.count} today`}
-          />
-          <StatCard
-            icon={<Users className="w-5 h-5" />}
-            label="Active Users"
-            value={activeRestaurants.count.toString()}
-            subValue="Subscriptions"
+            label="Today's Orders"
+            value={todayOrders.count.toString()}
+            subValue="Orders placed today"
           />
         </div>
 
@@ -115,20 +107,13 @@ export default async function AdminDashboardPage() {
             <Plus className="w-5 h-5" />
             Add New Restaurant
           </Link>
-          <Link
-            href="/admin/restaurants"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-900 rounded-xl hover:bg-gray-200 transition-all font-medium"
-          >
-            <Store className="w-5 h-5" />
-            View All Restaurants
-          </Link>
         </div>
 
-        {/* Recent Restaurants */}
+        {/* All Restaurants */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900">Recent Restaurants</h2>
-            <p className="text-sm text-gray-500 mt-1">Latest onboarded restaurants</p>
+            <h2 className="text-lg font-bold text-gray-900">All Restaurants</h2>
+            <p className="text-sm text-gray-500 mt-1">Manage all restaurant accounts</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -155,7 +140,7 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {recentRestaurants.map((restaurant) => (
+                {allRestaurants.map((restaurant) => (
                   <tr key={restaurant.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium text-gray-900">{restaurant.name}</div>
@@ -185,19 +170,27 @@ export default async function AdminDashboardPage() {
                       })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <Link
-                        href={`/admin/restaurants/${restaurant.id}`}
-                        className="text-sm font-medium text-black hover:text-gray-600 transition"
-                      >
-                        View →
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/${restaurant.slug}`}
+                          target="_blank"
+                          className="text-sm font-medium text-gray-600 hover:text-black transition inline-flex items-center gap-1"
+                          title="View restaurant page"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                        <DeleteRestaurantButton 
+                          restaurantId={restaurant.id} 
+                          restaurantName={restaurant.name}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {recentRestaurants.length === 0 && (
+          {allRestaurants.length === 0 && (
             <div className="px-6 py-16 text-center">
               <Store className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants yet</h3>
