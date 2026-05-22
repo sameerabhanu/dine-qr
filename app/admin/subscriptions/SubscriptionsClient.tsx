@@ -389,6 +389,7 @@ export default function SubscriptionsClient({ restaurants }: { restaurants: Rest
       {/* Confirmation Dialog */}
       {showConfirm && (
         <ConfirmDialog
+          isOpen={!!showConfirm}
           title={showConfirm.action === 'suspend' ? 'Suspend Restaurant' : 'Reactivate Restaurant'}
           message={
             showConfirm.action === 'suspend'
