@@ -31,6 +31,15 @@ export const restaurants = pgTable('restaurants', {
   timezone: varchar('timezone', { length: 50 }).default('Asia/Kolkata'),
   currency: varchar('currency', { length: 3 }).default('INR'),
   
+  // Subscription Management
+  subscriptionStatus: varchar('subscription_status', { length: 50 }).default('active'), // active, expiring_soon, expired, suspended, inactive
+  subscriptionExpiresAt: timestamp('subscription_expires_at'),
+  gracePeriodDays: integer('grace_period_days').default(2),
+  suspendedAt: timestamp('suspended_at'),
+  suspensionReason: text('suspension_reason'),
+  lastPaymentAmount: decimal('last_payment_amount', { precision: 10, scale: 2 }),
+  lastPaymentDate: timestamp('last_payment_date'),
+  
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -281,3 +290,17 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
     references: [subscriptions.id],
   }),
 }));
+
+// DEMO REQUESTS (For new restaurant onboarding)
+export const demoRequests = pgTable('demo_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  restaurantName: varchar('restaurant_name', { length: 255 }).notNull(),
+  ownerName: varchar('owner_name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 20 }).notNull(),
+  address: text('address'),
+  status: varchar('status', { length: 50 }).default('pending'), // pending, contacted, approved, rejected
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});

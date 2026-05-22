@@ -20,7 +20,13 @@ export default function RestaurantLoginPage({
   // Unwrap params on client side
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
-  }, [params]);
+    
+    // Check if restaurant is suspended
+    const suspended = searchParams?.get('suspended');
+    if (suspended === 'true') {
+      setError('This restaurant is currently suspended. Please contact DineQR support.');
+    }
+  }, [params, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

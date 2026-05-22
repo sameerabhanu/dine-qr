@@ -99,6 +99,81 @@ export default async function RestaurantAdminPage({
         </div>
       </header>
 
+      {/* Subscription Warning Banners */}
+      {restaurant.subscriptionStatus === 'expiring_soon' && restaurant.subscriptionExpiresAt && (
+        <div className="bg-yellow-50 border-b border-yellow-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0 mt-0.5">
+                ⚠️
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-semibold text-yellow-900 mb-1">
+                  Subscription Expiring Soon
+                </p>
+                <p className="text-xs sm:text-sm text-yellow-800">
+                  Your subscription expires on {new Date(restaurant.subscriptionExpiresAt).toLocaleDateString('en-IN')} 
+                  ({Math.ceil((new Date(restaurant.subscriptionExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days remaining).
+                  Please contact DineQR support to renew.
+                </p>
+                <p className="text-xs sm:text-sm text-yellow-800 mt-2">
+                  Contact: +91-8333027544 | Email: vanumudemo2@gmail.com
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {restaurant.subscriptionStatus === 'expired' && restaurant.subscriptionExpiresAt && (
+        <div className="bg-orange-50 border-b border-orange-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0 mt-0.5">
+                ⚠️
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-semibold text-orange-900 mb-1">
+                  URGENT: Subscription Expired
+                </p>
+                <p className="text-xs sm:text-sm text-orange-800">
+                  Your subscription expired on {new Date(restaurant.subscriptionExpiresAt).toLocaleDateString('en-IN')}. 
+                  You have {restaurant.gracePeriodDays || 2} days grace period before your restaurant will be suspended.
+                  After that, ordering will be disabled.
+                </p>
+                <p className="text-xs sm:text-sm text-orange-800 mt-2">
+                  <strong>Contact immediately:</strong> +91-8333027544 | vanumudemo2@gmail.com
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {restaurant.subscriptionStatus === 'suspended' && (
+        <div className="bg-red-50 border-b border-red-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5">
+                🚫
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-semibold text-red-900 mb-1">
+                  Restaurant Suspended
+                </p>
+                <p className="text-xs sm:text-sm text-red-800">
+                  Your restaurant has been suspended due to non-payment. Customer ordering is currently disabled.
+                  Please contact DineQR support immediately to reactivate your account.
+                </p>
+                <p className="text-xs sm:text-sm text-red-800 mt-2">
+                  <strong>Contact:</strong> +91-8333027544 | Email: vanumudemo2@gmail.com
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content - Mobile Responsive */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Stats Grid - Always Side by Side */}

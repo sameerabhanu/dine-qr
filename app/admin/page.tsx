@@ -99,6 +99,13 @@ export default async function AdminDashboardPage() {
             <Plus className="w-5 h-5" />
             Add New Restaurant
           </Link>
+          <Link
+            href="/admin/subscriptions"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium"
+          >
+            <Store className="w-5 h-5" />
+            Manage Subscriptions
+          </Link>
         </div>
 
         {/* All Restaurants */}

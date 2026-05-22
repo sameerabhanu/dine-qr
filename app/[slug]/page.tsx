@@ -28,6 +28,38 @@ export default async function RestaurantPage({
     notFound();
   }
 
+  // Check if restaurant is suspended or inactive
+  if (restaurant.subscriptionStatus === 'suspended' || restaurant.subscriptionStatus === 'inactive') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-gray-200 p-8 text-center shadow-lg">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-3xl">🚫</div>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Restaurant Temporarily Unavailable</h1>
+          <p className="text-gray-600 mb-6">
+            {restaurant.name} is currently not accepting orders. Please try again later or contact the restaurant directly.
+          </p>
+          {restaurant.phone && (
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+              <p className="text-sm text-gray-600 mb-1">Contact Restaurant:</p>
+              <a
+                href={`tel:${restaurant.phone}`}
+                className="text-lg font-semibold text-black hover:underline flex items-center justify-center gap-2"
+              >
+                <Phone className="w-5 h-5" />
+                {restaurant.phone}
+              </a>
+            </div>
+          )}
+          <p className="text-sm text-gray-500">
+            We apologize for the inconvenience.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Fetch table if QR code provided
   let table = null;
   if (tableQR) {
