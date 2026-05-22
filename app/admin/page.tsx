@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { restaurants, orders } from '@/lib/db/schema';
-import { count, gte, eq } from 'drizzle-orm';
-import { Store, ShoppingBag, Plus, LogOut, Menu, Eye, Trash2 } from 'lucide-react';
+import { restaurants } from '@/lib/db/schema';
+import { count, eq } from 'drizzle-orm';
+import { Store, Users, Plus, LogOut, Menu, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import DeleteRestaurantButton from './DeleteRestaurantButton';
 
@@ -21,14 +21,6 @@ export default async function AdminDashboardPage() {
     .select({ count: count() })
     .from(restaurants)
     .where(eq(restaurants.isActive, true));
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const [todayOrders] = await db
-    .select({ count: count() })
-    .from(orders)
-    .where(gte(orders.createdAt, today));
 
   // Fetch all restaurants (not just recent)
   const allRestaurants = await db
@@ -91,10 +83,10 @@ export default async function AdminDashboardPage() {
             subValue={`${activeRestaurants.count} active`}
           />
           <StatCard
-            icon={<ShoppingBag className="w-5 h-5" />}
-            label="Today's Orders"
-            value={todayOrders.count.toString()}
-            subValue="Orders placed today"
+            icon={<Users className="w-5 h-5" />}
+            label="Active Restaurants"
+            value={activeRestaurants.count.toString()}
+            subValue="Currently subscribed"
           />
         </div>
 
