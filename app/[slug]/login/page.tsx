@@ -58,10 +58,11 @@ export default function RestaurantLoginPage({
         return;
       }
 
-      // Access code is valid, redirect to admin with full page reload
-      // This ensures cookies are properly set before navigation
+      // Access code is valid, cookies are set by the API response
+      // Use router navigation which properly handles Next.js routing
       const redirect = searchParams?.get('redirect') || `/${slug}/admin`;
-      window.location.href = redirect;
+      router.push(redirect);
+      router.refresh(); // Force refresh to pick up new cookies
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);

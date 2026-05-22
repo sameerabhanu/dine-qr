@@ -34,21 +34,13 @@ export async function getRestaurantAuth(slug: string) {
       
       if (lastActivity < thirtyMinutesAgo) {
         console.log('🔒 Session expired due to inactivity');
-        // Clear cookies
-        cookieStore.delete(`restaurant_${slug}_auth`);
-        cookieStore.delete(`restaurant_${slug}_activity`);
+        // Just return null - cookies will be cleared by logout or next API call
         return null;
       }
     }
 
-    // Update last activity timestamp
-    cookieStore.set(`restaurant_${slug}_activity`, Date.now().toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 2, // Match auth cookie expiration
-      path: '/',
-    });
+    // Note: Activity timestamp is updated by the API route, not here
+    // Server Components cannot modify cookies
 
     const staffId = authCookie.value;
 
