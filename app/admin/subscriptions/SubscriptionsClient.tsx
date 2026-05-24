@@ -149,21 +149,24 @@ export default function SubscriptionsClient({ restaurants }: { restaurants: Rest
   return (
     <>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-black mb-3">
+              <Link href="/admin" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-black mb-3 font-medium">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Dashboard
               </Link>
               <h1 className="text-3xl font-bold text-gray-900">Subscription Management</h1>
-              <p className="text-gray-600 mt-1">Manage restaurant subscriptions and payments</p>
+              <p className="text-gray-600 mt-2">Manage restaurant subscriptions and payments</p>
             </div>
             <button
-              onClick={() => { setLoading(true); router.refresh(); }}
+              onClick={() => {
+                setLoading(true);
+                window.location.reload();
+              }}
               disabled={loading}
-              className="px-4 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition flex items-center gap-2"
+              className="px-4 py-2.5 bg-black text-white rounded-xl hover:bg-gray-800 transition flex items-center gap-2 disabled:opacity-50 font-semibold shadow-md"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -185,10 +188,10 @@ export default function SubscriptionsClient({ restaurants }: { restaurants: Rest
             <button
               key={key}
               onClick={() => setFilter(key as FilterType)}
-              className={`px-4 py-2 rounded-lg transition whitespace-nowrap ${
+              className={`px-5 py-2.5 rounded-xl transition whitespace-nowrap font-semibold ${
                 filter === key
-                  ? 'bg-black text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-black text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
               }`}
             >
               {label} ({count})
@@ -250,18 +253,16 @@ export default function SubscriptionsClient({ restaurants }: { restaurants: Rest
                   <button
                     onClick={() => setShowPaymentModal(restaurant)}
                     disabled={actionLoading === restaurant.id}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium flex items-center gap-2"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
                   >
-                    {actionLoading === restaurant.id ? <LoadingSpinner size="sm" /> : <DollarSign className="w-4 h-4" />}
-                    Mark as Paid
+                    {actionLoading === restaurant.id ? <LoadingSpinner size="sm" /> : 'Mark as Paid'}
                   </button>
                   
                   <button
                     onClick={() => setShowExtendModal(restaurant)}
                     disabled={actionLoading === restaurant.id}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
                   >
-                    <Calendar className="w-4 h-4" />
                     Extend
                   </button>
                   
@@ -269,18 +270,16 @@ export default function SubscriptionsClient({ restaurants }: { restaurants: Rest
                     <button
                       onClick={() => setShowConfirm({ restaurant, action: 'reactivate' })}
                       disabled={actionLoading === restaurant.id}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium flex items-center gap-2"
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium"
                     >
-                      <CheckCircle className="w-4 h-4" />
                       Reactivate
                     </button>
                   ) : (
                     <button
                       onClick={() => setShowConfirm({ restaurant, action: 'suspend' })}
                       disabled={actionLoading === restaurant.id}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium flex items-center gap-2"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium"
                     >
-                      <XCircle className="w-4 h-4" />
                       Suspend
                     </button>
                   )}

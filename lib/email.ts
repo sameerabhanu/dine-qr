@@ -17,6 +17,11 @@ export async function sendDemoRequestEmail(restaurantData: {
   address: string;
 }) {
   try {
+    console.log('📧 Attempting to send demo request email...');
+    console.log('Resend API Key exists:', !!process.env.RESEND_API_KEY);
+    console.log('Admin email:', ADMIN_EMAIL);
+    console.log('Restaurant data:', restaurantData.name);
+    
     const { data, error } = await resend.emails.send({
       from: 'DineQR <onboarding@resend.dev>',
       to: [ADMIN_EMAIL],

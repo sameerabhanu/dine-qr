@@ -38,21 +38,21 @@ export default async function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
                 <Menu className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-gray-900">Super Admin</h1>
-                <p className="text-xs text-gray-500">Dashboard</p>
+                <h1 className="text-lg font-bold text-gray-900">DineQR</h1>
+                <p className="text-xs text-gray-500">Super Admin Dashboard</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900">{session.user.name}</p>
+                <p className="text-sm font-semibold text-gray-900">{session.user.name}</p>
                 <p className="text-xs text-gray-500">{session.user.email}</p>
               </div>
               <form action={async () => {
@@ -62,7 +62,7 @@ export default async function AdminDashboardPage() {
               }}>
                 <button
                   type="submit"
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+                  className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition"
                   title="Sign Out"
                 >
                   <LogOut className="w-5 h-5" />
@@ -77,13 +77,13 @@ export default async function AdminDashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <StatCard
-            icon={<Store className="w-5 h-5" />}
+            icon={<Store className="w-6 h-6" />}
             label="Total Restaurants"
             value={totalRestaurants.count.toString()}
             subValue={`${activeRestaurants.count} active`}
           />
           <StatCard
-            icon={<Users className="w-5 h-5" />}
+            icon={<Users className="w-6 h-6" />}
             label="Active Restaurants"
             value={activeRestaurants.count.toString()}
             subValue="Currently subscribed"
@@ -91,17 +91,17 @@ export default async function AdminDashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-8 flex flex-wrap items-center gap-3">
           <Link
             href="/admin/restaurants/new"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all font-medium hover:shadow-xl hover:shadow-black/20"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all font-semibold shadow-lg hover:shadow-xl hover:shadow-black/20 hover:scale-105"
           >
             <Plus className="w-5 h-5" />
             Add New Restaurant
           </Link>
           <Link
             href="/admin/subscriptions"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-md hover:shadow-lg"
           >
             <Store className="w-5 h-5" />
             Manage Subscriptions
@@ -110,52 +110,52 @@ export default async function AdminDashboardPage() {
 
         {/* All Restaurants */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900">All Restaurants</h2>
-            <p className="text-sm text-gray-500 mt-1">Manage all restaurant accounts</p>
+          <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
+            <h2 className="text-xl font-bold text-gray-900">All Restaurants</h2>
+            <p className="text-sm text-gray-600 mt-1">Manage all restaurant accounts</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Restaurant
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     URL
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {allRestaurants.map((restaurant) => (
                   <tr key={restaurant.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{restaurant.name}</div>
+                      <div className="font-semibold text-gray-900">{restaurant.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-600 font-mono">/{restaurant.slug}</span>
+                      <span className="text-sm text-gray-600 font-mono bg-gray-50 px-2 py-1 rounded">/{restaurant.slug}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {restaurant.email || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           restaurant.isActive
-                            ? 'bg-green-50 text-green-700 border border-green-200'
-                            : 'bg-gray-50 text-gray-700 border border-gray-200'
+                            ? 'bg-green-100 text-green-700 border border-green-200'
+                            : 'bg-gray-100 text-gray-700 border border-gray-200'
                         }`}
                       >
                         {restaurant.isActive ? 'Active' : 'Inactive'}
@@ -169,11 +169,11 @@ export default async function AdminDashboardPage() {
                       })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-4">
+                      <div className="flex items-center justify-end gap-3">
                         <Link
                           href={`/${restaurant.slug}`}
                           target="_blank"
-                          className="text-gray-900 hover:text-blue-600 transition"
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                           title="View restaurant page"
                         >
                           <Eye className="w-4 h-4" />
@@ -190,13 +190,13 @@ export default async function AdminDashboardPage() {
             </table>
           </div>
           {allRestaurants.length === 0 && (
-            <div className="px-6 py-16 text-center">
-              <Store className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No restaurants yet</h3>
+            <div className="px-6 py-20 text-center">
+              <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No restaurants yet</h3>
               <p className="text-gray-500 mb-6">Get started by adding your first restaurant</p>
               <Link
                 href="/admin/restaurants/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all font-medium"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all font-semibold shadow-lg hover:shadow-xl hover:shadow-black/20"
               >
                 <Plus className="w-5 h-5" />
                 Add Restaurant
@@ -221,16 +221,16 @@ function StatCard({
   subValue: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all hover:scale-105">
       <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900">
+        <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white shadow-md">
           {icon}
         </div>
       </div>
       <div>
-        <p className="text-sm text-gray-600 mb-1">{label}</p>
-        <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
-        <p className="text-xs text-gray-500">{subValue}</p>
+        <p className="text-sm font-medium text-gray-600 mb-1">{label}</p>
+        <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
+        <p className="text-sm text-gray-500">{subValue}</p>
       </div>
     </div>
   );
