@@ -1,6 +1,13 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Gmail SMTP Configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER, // Your Gmail address
+    pass: process.env.GMAIL_APP_PASSWORD, // Gmail App Password (not regular password)
+  },
+});
 
 export const ADMIN_EMAIL = 'vanumudemo2@gmail.com';
 export const ADMIN_PHONE = '+91-8333027544';
@@ -17,14 +24,15 @@ export async function sendDemoRequestEmail(restaurantData: {
   address: string;
 }) {
   try {
-    console.log('📧 Attempting to send demo request email...');
-    console.log('Resend API Key exists:', !!process.env.RESEND_API_KEY);
+    console.log('📧 Attempting to send demo request email via Gmail SMTP...');
+    console.log('Gmail user exists:', !!process.env.GMAIL_USER);
+    console.log('Gmail password exists:', !!process.env.GMAIL_APP_PASSWORD);
     console.log('Admin email:', ADMIN_EMAIL);
     console.log('Restaurant data:', restaurantData.name);
     
-    const { data, error } = await resend.emails.send({
-      from: 'DineQR <onboarding@resend.dev>',
-      to: [ADMIN_EMAIL],
+    const mailOptions = {
+      from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
+      to: ADMIN_EMAIL,
       subject: `🎯 New Demo Request - ${restaurantData.name}`,
       html: `
         <!DOCTYPE html>
@@ -86,18 +94,17 @@ export async function sendDemoRequestEmail(restaurantData: {
           </body>
         </html>
       `,
-    });
+    };
 
-    if (error) {
-      console.error('Failed to send demo request email:', error);
-      return { success: false, error };
-    }
-
-    console.log('✅ Demo request email sent:', data);
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error sending demo request email:', error);
-    return { success: false, error };
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('✅ Demo request email sent successfully!');
+    console.log('Message ID:', info.messageId);
+    return { success: true, data: info };
+  } catch (error: any) {
+    console.error('❌ Error sending demo request email:', error);
+    console.error('Error details:', error.message);
+    return { success: false, error: error.message };
   }
 }
 
@@ -131,9 +138,9 @@ export async function sendDailySubscriptionReport(report: {
   `;
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'DineQR <onboarding@resend.dev>',
-      to: [ADMIN_EMAIL],
+    const mailOptions = {
+      from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
+      to: ADMIN_EMAIL,
       subject: `📊 DineQR Subscription Report - ${new Date().toLocaleDateString('en-IN')}`,
       html: `
         <!DOCTYPE html>
@@ -218,7 +225,7 @@ export async function sendDailySubscriptionReport(report: {
                 </div>
 
                 <div style="text-align: center;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dineqr-scan.vercel.app'}/admin/subscriptions" class="button">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dineqr-order.vercel.app'}/admin/subscriptions" class="button">
                     Manage Subscriptions
                   </a>
                 </div>
@@ -231,18 +238,17 @@ export async function sendDailySubscriptionReport(report: {
           </body>
         </html>
       `,
-    });
+    };
 
-    if (error) {
-      console.error('Failed to send daily report email:', error);
-      return { success: false, error };
-    }
+    const info = await transporter.sendMail(mailOptions);
 
-    console.log('✅ Daily subscription report sent:', data);
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error sending daily report email:', error);
-    return { success: false, error };
+    console.log('✅ Daily subscription report sent successfully!');
+    console.log('Message ID:', info.messageId);
+    return { success: true, data: info };
+  } catch (error: any) {
+    console.error('❌ Failed to send daily report email:', error);
+    console.error('Error details:', error.message);
+    return { success: false, error: error.message };
   }
 }
 
@@ -251,9 +257,9 @@ export async function sendDailySubscriptionReport(report: {
  */
 export async function sendSuspensionNotification(restaurant: any) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'DineQR <onboarding@resend.dev>',
-      to: [ADMIN_EMAIL],
+    const mailOptions = {
+      from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
+      to: ADMIN_EMAIL,
       subject: `🔴 Restaurant Suspended - ${restaurant.name}`,
       html: `
         <!DOCTYPE html>
@@ -310,7 +316,7 @@ export async function sendSuspensionNotification(restaurant: any) {
                 </p>
 
                 <div style="text-align: center;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dineqr-scan.vercel.app'}/admin/subscriptions" class="button">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dineqr-order.vercel.app'}/admin/subscriptions" class="button">
                     Manage Subscriptions
                   </a>
                 </div>
@@ -322,17 +328,16 @@ export async function sendSuspensionNotification(restaurant: any) {
           </body>
         </html>
       `,
-    });
+    };
 
-    if (error) {
-      console.error('Failed to send suspension notification:', error);
-      return { success: false, error };
-    }
+    const info = await transporter.sendMail(mailOptions);
 
-    console.log('✅ Suspension notification sent:', data);
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error sending suspension notification:', error);
-    return { success: false, error };
+    console.log('✅ Suspension notification sent successfully!');
+    console.log('Message ID:', info.messageId);
+    return { success: true, data: info };
+  } catch (error: any) {
+    console.error('❌ Error sending suspension notification:', error);
+    console.error('Error details:', error.message);
+    return { success: false, error: error.message };
   }
 }
