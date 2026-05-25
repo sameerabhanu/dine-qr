@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { db } from '@/lib/db';
-import { superAdmins, staff } from '@/lib/db/schema';
+import { superAdmins } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { verifyPassword } from '@/lib/auth';
 
@@ -54,41 +54,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               userType: 'super_admin',
             };
           } else {
-            // Check restaurant staff (legacy password auth - new restaurants use access codes)
-            const [staffMember] = await db
-              .select()
-              .from(staff)
-              .where(eq(staff.email, email))
-              .limit(1);
-
-            if (!staffMember || !staffMember.isActive) {
-              return null;
-            }
-
-            // If no password hash, this staff uses access code authentication
-            if (!staffMember.passwordHash) {
-              return null; // Access code auth happens via separate API
-            }
-
-            const isValid = await verifyPassword(password, staffMember.passwordHash);
-            if (!isValid) {
-              return null;
-            }
-
-            // Update last login
-            await db
-              .update(staff)
-              .set({ lastLoginAt: new Date() })
-              .where(eq(staff.id, staffMember.id));
-
-            return {
-              id: staffMember.id,
-              email: staffMember.email || '',
-              name: staffMember.name,
-              userType: 'staff',
-              restaurantId: staffMember.restaurantId,
-              role: staffMember.role,
-            };
+            // Staff use access code authentication via separate API, not NextAuth
+            return null;
           }
         } catch (error) {
           console.error('Auth error:', error);
