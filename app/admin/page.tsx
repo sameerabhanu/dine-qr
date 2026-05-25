@@ -24,8 +24,9 @@ export default async function AdminDashboardPage() {
       name: restaurants.name,
       slug: restaurants.slug,
       email: restaurants.email,
-      location: restaurants.location,
+      address: restaurants.address,
       phone: restaurants.phone,
+      agencyLocation: restaurants.agencyLocation,
       currentMonthOrdersCount: restaurants.currentMonthOrdersCount,
       lastMonthOrdersCount: restaurants.lastMonthOrdersCount,
     })
@@ -134,6 +135,7 @@ export default async function AdminDashboardPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       <div>{restaurant.email || '-'}</div>
                       {restaurant.phone && <div className="text-xs text-gray-500">{restaurant.phone}</div>}
+                      {restaurant.agencyLocation && <div className="text-xs text-gray-500">{restaurant.agencyLocation}</div>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className="text-lg font-bold text-gray-900">{restaurant.currentMonthOrdersCount || 0}</span>

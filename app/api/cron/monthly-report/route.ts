@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
       .select({
         id: restaurants.id,
         name: restaurants.name,
-        location: restaurants.location,
-        phone: restaurants.phone,
+        agencyLocation: restaurants.agencyLocation,
+        agencyContact: restaurants.agencyContact,
         lastMonthOrdersCount: restaurants.lastMonthOrdersCount,
       })
       .from(restaurants);
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
     for (const restaurant of allRestaurants) {
       await sendMonthlyReport({
         restaurantName: restaurant.name,
-        location: restaurant.location || 'N/A',
-        contact: restaurant.phone || 'N/A',
+        location: restaurant.agencyLocation || 'N/A',
+        contact: restaurant.agencyContact || 'N/A',
         lastMonthOrdersCount: restaurant.lastMonthOrdersCount || 0,
       });
     }
