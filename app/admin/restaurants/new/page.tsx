@@ -17,8 +17,6 @@ export default function NewRestaurantPage() {
     email: '',
     address: '',
     numberOfTables: 10,
-    primaryColor: '#000000',
-    secondaryColor: '#FFFFFF',
     ownerName: '',
     accessCode: '',
   });
