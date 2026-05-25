@@ -9,13 +9,10 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 
 type Table = {
   id: string;
-  tableNumber: string;
+  tableNumber: number;
   qrCode: string;
   isActive: boolean | null;
-  capacity: number | null;
   restaurantId: string;
-  lastLoginAt?: Date | null;
-  createdAt: Date | null;
 };
 
 export default function TablesClient({
