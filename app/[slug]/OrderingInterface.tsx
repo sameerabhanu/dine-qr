@@ -9,7 +9,7 @@ type MenuItem = {
   id: string;
   name: string;
   price: string;
-  foodType: string;
+  foodType: string | null;
 };
 
 type Category = {
@@ -179,13 +179,13 @@ export default function OrderingInterface({
   // Filter menu items based on selected filter
   const filterItems = (items: MenuItem[]) => {
     if (selectedFilters.size === 0) return [];
-    return items.filter(item => selectedFilters.has(item.foodType));
+    return items.filter(item => item.foodType && selectedFilters.has(item.foodType));
   };
 
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Food type icon component
-  const FoodTypeIcon = ({ type, size = 'default' }: { type: string; size?: 'default' | 'large' | 'toggle' }) => {
+  const FoodTypeIcon = ({ type, size = 'default' }: { type: string | null; size?: 'default' | 'large' | 'toggle' }) => {
     let sizeClasses, dotClasses, borderRadius;
     
     if (size === 'toggle') {
