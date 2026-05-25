@@ -60,7 +60,7 @@ export default async function WaiterPage({
         inArray(orders.status, ['claimed', 'served'])
       )
     )
-    .orderBy(desc(orders.claimedAt));
+    .orderBy(desc(orders.createdAt));
 
   // Collect all order IDs
   const allOrderIds = [

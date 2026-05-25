@@ -658,7 +658,7 @@ export default function WaiterDashboard({
                         </span>
                       </div>
                       <div className="text-xs sm:text-sm text-gray-600 truncate">
-                        Claimed {order.claimedAt ? formatDistanceToNow(new Date(order.claimedAt), { addSuffix: true }) : 'Just now'}
+                        Claimed {order.createdAt ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true }) : 'Just now'}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
