@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { restaurants, subscriptions, tables, staff, payments } from '@/lib/db/schema';
+import { restaurants, tables, staff } from '@/lib/db/schema';
 import { randomUUID } from 'crypto';
 import { eq } from 'drizzle-orm';
 
@@ -67,44 +67,9 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         email: email || null,
         address: address || null,
-        primaryColor: primaryColor || '#000000',
-        secondaryColor: secondaryColor || '#FFFFFF',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        accessCode: accessCode,
       })
       .returning();
-
-    // Create subscription
-    const setupFeeAmount = 2499.0;
-    const currentDate = new Date();
-    const nextYear = new Date(currentDate);
-    nextYear.setFullYear(nextYear.getFullYear() + 1);
-
-    await db.insert(subscriptions).values({
-      id: randomUUID(),
-      restaurantId: restaurant.id,
-      status: 'active',
-      setupFeePaid: false,
-      setupFeeAmount: setupFeeAmount.toString(),
-      currentPeriodStart: currentDate,
-      currentPeriodEnd: nextYear,
-      nextBillingDate: nextYear,
-      autoRenew: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    // Create payment record
-    await db.insert(payments).values({
-      id: randomUUID(),
-      restaurantId: restaurant.id,
-      amount: setupFeeAmount.toString(),
-      currency: 'INR',
-      type: 'setup_fee',
-      status: 'pending',
-      createdAt: new Date(),
-    });
 
     // Create tables with QR codes
     const tablesToCreate = [];
@@ -114,11 +79,9 @@ export async function POST(request: NextRequest) {
       tablesToCreate.push({
         id: randomUUID(),
         restaurantId: restaurant.id,
-        tableNumber: i.toString(),
+        tableNumber: i,
         qrCode,
-        capacity: 4,
         isActive: true,
-        createdAt: new Date(),
       });
     }
 
@@ -130,9 +93,8 @@ export async function POST(request: NextRequest) {
       restaurantId: restaurant.id,
       name: ownerName,
       accessCode: accessCode,
-      role: 'owner',
+      role: 'admin',
       isActive: true,
-      createdAt: new Date(),
     });
 
     console.log('\n✅ RESTAURANT CREATED SUCCESSFULLY!');
@@ -171,7 +133,7 @@ export async function GET() {
     const allRestaurants = await db
       .select()
       .from(restaurants)
-      .orderBy(restaurants.createdAt);
+      .orderBy(restaurants.name);
 
     return NextResponse.json({ restaurants: allRestaurants });
   } catch (error: unknown) {

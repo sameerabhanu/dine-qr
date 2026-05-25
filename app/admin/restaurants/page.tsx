@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { restaurants, subscriptions } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { restaurants } from '@/lib/db/schema';
+import { desc } from 'drizzle-orm';
 import Link from 'next/link';
 import { ArrowLeft, Building2, Plus, Eye } from 'lucide-react';
-import { format } from 'date-fns';
 
 export default async function RestaurantsListPage() {
   const session = await auth();
@@ -15,13 +14,9 @@ export default async function RestaurantsListPage() {
   }
 
   const allRestaurants = await db
-    .select({
-      restaurant: restaurants,
-      subscription: subscriptions,
-    })
+    .select()
     .from(restaurants)
-    .leftJoin(subscriptions, eq(restaurants.id, subscriptions.restaurantId))
-    .orderBy(desc(restaurants.createdAt));
+    .orderBy(desc(restaurants.name));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,13 +79,10 @@ export default async function RestaurantsListPage() {
                       Contact
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Subscription
+                      This Month Orders
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                      Created
+                      Last Month Orders
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                       Actions
@@ -98,21 +90,13 @@ export default async function RestaurantsListPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {allRestaurants.map(({ restaurant, subscription }) => (
+                  {allRestaurants.map((restaurant) => (
                     <tr key={restaurant.id} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {restaurant.logoUrl ? (
-                            <img
-                              src={restaurant.logoUrl}
-                              alt={restaurant.name}
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                              <Building2 className="w-5 h-5 text-white" />
-                            </div>
-                          )}
+                          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                            <Building2 className="w-5 h-5 text-white" />
+                          </div>
                           <div>
                             <p className="font-semibold text-gray-900">
                               {restaurant.name}
@@ -125,46 +109,23 @@ export default async function RestaurantsListPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
-                          <p className="text-gray-900">{restaurant.email}</p>
-                          <p className="text-gray-500">{restaurant.phone}</p>
+                          <p className="text-gray-900">{restaurant.email || '-'}</p>
+                          <p className="text-gray-500">{restaurant.phone || '-'}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        {subscription ? (
-                          <div className="text-sm">
-                            <p className="text-gray-900 capitalize">
-                              {subscription.status}
-                            </p>
-                            <p className="text-gray-500">
-                              {subscription.currentPeriodEnd
-                                ? `Until ${format(
-                                    new Date(subscription.currentPeriodEnd),
-                                    'MMM dd, yyyy'
-                                  )}`
-                                : 'Lifetime'}
-                            </p>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-gray-500">No subscription</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                            restaurant.isActive
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {restaurant.isActive ? 'Active' : 'Inactive'}
+                      <td className="px-6 py-4 text-center">
+                        <span className="text-lg font-bold text-gray-900">
+                          {restaurant.currentMonthOrdersCount || 0}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {restaurant.createdAt ? format(new Date(restaurant.createdAt), 'MMM dd, yyyy') : '-'}
+                      <td className="px-6 py-4 text-center">
+                        <span className="text-lg font-bold text-gray-900">
+                          {restaurant.lastMonthOrdersCount || 0}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <Link
-                          href={`/${restaurant.slug}`}
+                          href={`/${restaurant.slug}/admin`}
                           target="_blank"
                           className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-black transition"
                         >

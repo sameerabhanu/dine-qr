@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
-import { restaurants, staff, tables, categories, menuItems, orders, orderItems, subscriptions, payments } from '@/lib/db/schema';
+import { restaurants, staff, tables, categories, menuItems, orders, orderItems } from '@/lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 
 export async function DELETE(
@@ -44,16 +44,10 @@ export async function DELETE(
     // 6. Delete tables
     await db.delete(tables).where(eq(tables.restaurantId, id));
 
-    // 7. Delete payments
-    await db.delete(payments).where(eq(payments.restaurantId, id));
-
-    // 8. Delete subscriptions
-    await db.delete(subscriptions).where(eq(subscriptions.restaurantId, id));
-
-    // 9. Delete staff
+    // 7. Delete staff
     await db.delete(staff).where(eq(staff.restaurantId, id));
 
-    // 10. Finally delete restaurant
+    // 8. Finally delete restaurant (CASCADE will handle remaining dependencies)
     await db.delete(restaurants).where(eq(restaurants.id, id));
 
     return NextResponse.json({ success: true, message: 'Restaurant deleted successfully' });
