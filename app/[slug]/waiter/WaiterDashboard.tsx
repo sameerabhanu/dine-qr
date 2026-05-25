@@ -316,6 +316,23 @@ export default function WaiterDashboard({
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'orders',
+          filter: `restaurant_id=eq.${restaurant.id}`,
+        },
+        (payload) => {
+          console.log('🗑️ Order deleted:', payload);
+          const deletedOrderId = payload.old.id;
+          
+          // Remove from both lists when order is deleted (completed orders are deleted)
+          setMyOrders(prev => prev.filter(o => o.order.id !== deletedOrderId));
+          setPendingOrders(prev => prev.filter(o => o.order.id !== deletedOrderId));
+        }
+      )
       .subscribe((status) => {
         console.log('📡 Subscription status:', status);
         if (status === 'SUBSCRIBED') {
@@ -407,7 +424,11 @@ export default function WaiterDashboard({
         return;
       }
 
-      // Success - Realtime will handle the UI update instantly
+      // Optimistically remove from UI immediately (order is deleted from DB)
+      setMyOrders(prev => prev.filter(o => o.order.id !== orderId));
+      setPendingOrders(prev => prev.filter(o => o.order.id !== orderId));
+      
+      console.log('✅ Order completed and removed from UI');
     } catch (err) {
       setError('Network error. Please try again.');
     } finally {
