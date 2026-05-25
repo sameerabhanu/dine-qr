@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Clock, LogOut, AlertCircle, CheckCircle, Loader2, ShoppingBag, QrCode, User, X, Volume2, VolumeX } from 'lucide-react';
+import { Clock, LogOut, AlertCircle, CheckCircle, Loader2, ShoppingBag, QrCode, User, X, Volume2, VolumeX, Bell, BellOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -47,6 +47,97 @@ export default function WaiterDashboard({
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [audioReady, setAudioReady] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // PWA & Service Worker state
+  const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [isPWAInstalled, setIsPWAInstalled] = useState(false);
+
+  // Check if PWA is installed
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const isIOSStandalone = (window.navigator as any).standalone === true;
+      setIsPWAInstalled(isStandalone || (isIOS && isIOSStandalone));
+    }
+  }, []);
+
+  // Register Service Worker
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('✅ Service Worker registered:', registration);
+          setSwRegistration(registration);
+          
+          // Check notification permission
+          if ('Notification' in window) {
+            setNotificationPermission(Notification.permission);
+          }
+        })
+        .catch((error) => {
+          console.error('❌ Service Worker registration failed:', error);
+        });
+
+      // Listen for messages from Service Worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'PLAY_SOUND') {
+          playNotificationSound();
+        }
+      });
+    }
+  }, []);
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('This browser does not support notifications');
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      
+      if (permission === 'granted') {
+        console.log('✅ Notification permission granted');
+      } else {
+        console.log('❌ Notification permission denied');
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  };
+
+  // Send notification through Service Worker
+  const sendServiceWorkerNotification = (orderData: any) => {
+    if (!swRegistration || notificationPermission !== 'granted') {
+      console.log('⚠️ Cannot send notification:', { 
+        hasRegistration: !!swRegistration, 
+        permission: notificationPermission 
+      });
+      return;
+    }
+
+    try {
+      // Send message to Service Worker
+      if (swRegistration.active) {
+        swRegistration.active.postMessage({
+          type: 'NEW_ORDER',
+          payload: {
+            orderNumber: orderData.order.orderNumber,
+            tableNumber: orderData.table?.tableNumber || 'N/A',
+            totalAmount: orderData.order.totalAmount,
+          },
+        });
+        console.log('📤 Sent notification to Service Worker');
+      }
+    } catch (error) {
+      console.error('Error sending SW notification:', error);
+    }
+  };
 
   // Initialize Audio Context - more aggressive for mobile
   useEffect(() => {
@@ -170,6 +261,9 @@ export default function WaiterDashboard({
               // Play notification sound for new order
               console.log('🔔 Attempting to play notification for new order');
               playNotificationSound();
+              
+              // Send Service Worker notification (works even in background)
+              sendServiceWorkerNotification(data.order);
             } else {
               // Fallback to router refresh if API fails
               router.refresh();
@@ -348,6 +442,18 @@ export default function WaiterDashboard({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Notification Permission Button */}
+              {notificationPermission !== 'granted' && (
+                <button
+                  onClick={requestNotificationPermission}
+                  className="p-1.5 sm:p-2 rounded-lg transition flex-shrink-0 text-orange-600 bg-orange-50 hover:bg-orange-100 animate-pulse"
+                  title="Enable background notifications"
+                >
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              )}
+              
+              {/* Sound Toggle Button */}
               <button
                 onClick={() => {
                   // On mobile, clicking the button will also help initialize audio
