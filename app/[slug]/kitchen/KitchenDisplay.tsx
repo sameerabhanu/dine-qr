@@ -6,7 +6,6 @@ import { formatDistanceToNow } from 'date-fns';
 
 type Order = {
   id: string;
-  orderNumber: string;
   status: string | null;
   createdAt: Date | null;
   table: any;
@@ -190,7 +189,7 @@ export default function KitchenDisplay({
                 <div className="p-4 bg-gray-50 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-2xl font-bold text-gray-900">
-                      #{order.orderNumber}
+                      #{order.id.substring(0, 8)}
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(

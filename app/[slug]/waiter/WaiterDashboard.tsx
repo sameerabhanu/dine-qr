@@ -127,7 +127,7 @@ export default function WaiterDashboard({
         swRegistration.active.postMessage({
           type: 'NEW_ORDER',
           payload: {
-            orderNumber: orderData.order.orderNumber,
+            orderNumber: orderData.order.id.substring(0, 8),
             tableNumber: orderData.table?.tableNumber || 'N/A',
             totalAmount: orderData.order.totalAmount,
           },
@@ -552,7 +552,7 @@ export default function WaiterDashboard({
                           Table {table?.tableNumber || 'N/A'}
                         </h3>
                         <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
-                          #{order.orderNumber}
+                          #{order.id.substring(0, 8)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 flex-wrap">
@@ -654,7 +654,7 @@ export default function WaiterDashboard({
                           Table {table?.tableNumber || 'N/A'}
                         </h3>
                         <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
-                          #{order.orderNumber}
+                          #{order.id.substring(0, 8)}
                         </span>
                       </div>
                       <div className="text-xs sm:text-sm text-gray-600 truncate">
@@ -752,7 +752,7 @@ export default function WaiterDashboard({
                 <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
                   <div className="flex justify-between text-xs sm:text-sm mb-2">
                     <span className="text-gray-600">Order #:</span>
-                    <span className="font-semibold">{invoiceData.order?.orderNumber}</span>
+                    <span className="font-semibold">#{invoiceData.order?.id.substring(0, 8)}</span>
                   </div>
                   <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">Table:</span>

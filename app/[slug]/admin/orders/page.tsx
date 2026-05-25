@@ -116,7 +116,7 @@ export default async function AllOrdersPage({
                   {allOrders.map(({ order, table }) => (
                     <tr key={order.id} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        #{order.orderNumber}
+                        #{order.id.substring(0, 8)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         Table {table?.tableNumber || 'N/A'}
