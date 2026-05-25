@@ -21,12 +21,15 @@ export async function GET(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Fetch table
-    const [table] = await db
-      .select()
-      .from(tables)
-      .where(eq(tables.id, order.tableId))
-      .limit(1);
+    // Fetch table (if tableId exists)
+    let table = null;
+    if (order.tableId) {
+      [table] = await db
+        .select()
+        .from(tables)
+        .where(eq(tables.id, order.tableId))
+        .limit(1);
+    }
 
     // Fetch order items
     const items = await db
