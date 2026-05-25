@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
           inArray(orders.status, ['claimed', 'served'])
         )
       )
-      .orderBy(desc(orders.claimedAt));
+      .orderBy(desc(orders.createdAt));
 
     // Collect all order IDs
     const allOrderIds = [

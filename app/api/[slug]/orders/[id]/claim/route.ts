@@ -33,8 +33,6 @@ export async function POST(
       .set({
         status: 'claimed',
         waiterId: waiter.id,
-        waiterName: waiter.name,
-        claimedAt: new Date(),
       })
       .where(
         and(

@@ -90,26 +90,11 @@ export async function requireRestaurantAuth(slug: string, redirectPath?: string)
   console.log('🏪 Restaurant found:', {
     id: restaurant?.id,
     name: restaurant?.name,
-    subscriptionStatus: restaurant?.subscriptionStatus,
   });
 
   if (!restaurant) {
     console.error('❌ Restaurant not found');
     throw new Error('Restaurant not found');
-  }
-
-  // Check if restaurant is suspended or inactive (only if field exists)
-  const status = restaurant.subscriptionStatus || 'active'; // Default to active if not set
-  console.log('📊 Subscription status:', status);
-  
-  if (status === 'suspended' || status === 'inactive') {
-    console.log('🚫 Restaurant is suspended/inactive - blocking access');
-    // Clear auth cookies
-    const cookieStore = await cookies();
-    cookieStore.delete(`restaurant_${slug}_auth`);
-    cookieStore.delete(`restaurant_${slug}_activity`);
-    // Redirect to login with suspension message
-    redirect(`/${slug}/login?suspended=true`);
   }
 
   // Check restaurant-specific authentication first

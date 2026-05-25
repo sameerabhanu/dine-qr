@@ -32,7 +32,6 @@ export async function POST(
       .update(orders)
       .set({
         status: 'served',
-        servedAt: new Date(),
       })
       .where(
         and(

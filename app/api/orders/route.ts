@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { orders, orderItems, menuItems } from '@/lib/db/schema';
-import { generateOrderNumber } from '@/lib/utils';
 import { randomUUID } from 'crypto';
 import { eq } from 'drizzle-orm';
 
@@ -79,15 +78,12 @@ export async function POST(req: NextRequest) {
         id: randomUUID(),
         restaurantId,
         tableId,
-        orderNumber: generateOrderNumber(),
         status: 'pending',
         totalAmount: total.toString(),
-        specialInstructions: specialInstructions || null,
-        createdAt: new Date(),
       })
       .returning();
 
-    console.log('✅ Order created:', order.id, order.orderNumber);
+    console.log('✅ Order created:', order.id);
 
     // Create order items with all required fields
     const insertedItems = await db.insert(orderItems).values(
@@ -99,9 +95,6 @@ export async function POST(req: NextRequest) {
         quantity: item.quantity,
         priceAtOrder: item.priceAtOrder,
         subtotal: item.subtotal,
-        customizations: item.customizations,
-        notes: item.notes,
-        createdAt: new Date(),
       }))
     ).returning();
 

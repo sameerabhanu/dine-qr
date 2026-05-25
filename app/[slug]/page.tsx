@@ -64,17 +64,9 @@ export default async function RestaurantPage({
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {restaurant.logoUrl ? (
-                <img 
-                  src={restaurant.logoUrl} 
-                  alt={restaurant.name}
-                  className="w-12 h-12 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
-                  <QrCode className="w-6 h-6 text-white" />
-                </div>
-              )}
+              <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
+                <QrCode className="w-6 h-6 text-white" />
+              </div>
               <div>
                 <h1 className="text-lg font-bold text-gray-900">{restaurant.name}</h1>
                 {table && (

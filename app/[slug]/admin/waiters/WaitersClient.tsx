@@ -9,14 +9,11 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 type Waiter = {
   id: string;
   name: string;
-  accessCode: string | null;
+  accessCode: string;
   isActive: boolean | null;
-  email: string | null;
-  passwordHash: string | null;
   role: string;
   restaurantId: string;
   lastLoginAt: Date | null;
-  createdAt: Date | null;
 };
 
 export default function WaitersClient({
