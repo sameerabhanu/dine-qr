@@ -31,8 +31,8 @@ export async function POST(
       .orderBy(desc(tables.tableNumber));
 
     const nextTableNumber = existingTables.length > 0
-      ? (parseInt(existingTables[0].tableNumber) + 1).toString()
-      : '1';
+      ? existingTables[0].tableNumber + 1
+      : 1;
 
     // Generate unique QR code identifier (not the full URL)
     const qrCodeId = `${slug}-table-${nextTableNumber}-${randomUUID().substring(0, 8)}`;
