@@ -57,8 +57,6 @@ export async function POST(
         restaurantId: authResult.restaurant.id,
         name,
         displayOrder: displayOrder || 0,
-        isActive: true,
-        createdAt: new Date(),
       })
       .returning();
 

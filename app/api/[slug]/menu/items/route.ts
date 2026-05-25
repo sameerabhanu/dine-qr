@@ -79,7 +79,6 @@ export async function POST(
         foodType,
         isAvailable: isAvailable !== undefined ? isAvailable : true,
         displayOrder: displayOrder || 0,
-        createdAt: new Date(),
       })
       .returning();
 
