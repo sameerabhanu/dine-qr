@@ -27,7 +27,7 @@ export default async function WaitersManagementPage({
         eq(staff.role, 'waiter')
       )
     )
-    .orderBy(staff.createdAt);
+    .orderBy(staff.name);
 
   return (
     <div className="min-h-screen bg-gray-50">
