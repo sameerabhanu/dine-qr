@@ -76,10 +76,9 @@ export default function TablesClient({
     try {
       // Calculate next table number
       const maxTableNum = tables.reduce((max, t) => {
-        const num = parseInt(t.tableNumber);
-        return isNaN(num) ? max : Math.max(max, num);
+        return Math.max(max, t.tableNumber);
       }, 0);
-      const newTableNumber = (maxTableNum + 1).toString();
+      const newTableNumber = maxTableNum + 1;
 
       const response = await fetch(`/api/${slug}/tables`, {
         method: 'POST',
