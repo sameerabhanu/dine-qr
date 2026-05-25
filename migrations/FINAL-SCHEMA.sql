@@ -123,7 +123,7 @@ CREATE TABLE orders (
     
     -- Order details
     table_number INTEGER,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'claimed', 'served', 'completed')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'claimed', 'preparing', 'ready', 'served', 'completed')),
     total_amount DECIMAL(10, 2) NOT NULL,
     
     -- Digital ordering fee (configurable)
