@@ -195,3 +195,17 @@ VALUES (
 -- SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;
 -- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'restaurants';
 -- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'orders';
+
+-- ============================================
+-- DISABLE ROW LEVEL SECURITY (RLS)
+-- Required for Supabase Realtime to work properly
+-- ============================================
+ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE order_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tables DISABLE ROW LEVEL SECURITY;
+ALTER TABLE staff DISABLE ROW LEVEL SECURITY;
+ALTER TABLE menu_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE restaurants DISABLE ROW LEVEL SECURITY;
+ALTER TABLE super_admins DISABLE ROW LEVEL SECURITY;
+ALTER TABLE demo_requests DISABLE ROW LEVEL SECURITY;
