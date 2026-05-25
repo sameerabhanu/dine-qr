@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { restaurants } from '@/lib/db/schema';
-import { count, eq } from 'drizzle-orm';
-import { Store, Users, Plus, LogOut, Menu, Eye, Trash2 } from 'lucide-react';
+import { count } from 'drizzle-orm';
+import { Store, Plus, LogOut, Menu, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import DeleteRestaurantButton from './DeleteRestaurantButton';
 
@@ -16,24 +16,21 @@ export default async function AdminDashboardPage() {
 
   // Fetch statistics
   const [totalRestaurants] = await db.select({ count: count() }).from(restaurants);
-  
-  const [activeRestaurants] = await db
-    .select({ count: count() })
-    .from(restaurants)
-    .where(eq(restaurants.isActive, true));
 
-  // Fetch all restaurants (not just recent)
+  // Fetch all restaurants
   const allRestaurants = await db
     .select({
       id: restaurants.id,
       name: restaurants.name,
       slug: restaurants.slug,
       email: restaurants.email,
-      isActive: restaurants.isActive,
-      createdAt: restaurants.createdAt,
+      location: restaurants.location,
+      phone: restaurants.phone,
+      currentMonthOrdersCount: restaurants.currentMonthOrdersCount,
+      lastMonthOrdersCount: restaurants.lastMonthOrdersCount,
     })
     .from(restaurants)
-    .orderBy(restaurants.createdAt);
+    .orderBy(restaurants.name);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,18 +72,12 @@ export default async function AdminDashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 mb-8">
           <StatCard
             icon={<Store className="w-6 h-6" />}
             label="Total Restaurants"
             value={totalRestaurants.count.toString()}
-            subValue={`${activeRestaurants.count} active`}
-          />
-          <StatCard
-            icon={<Users className="w-6 h-6" />}
-            label="Active Restaurants"
-            value={activeRestaurants.count.toString()}
-            subValue="Currently subscribed"
+            subValue="Active restaurants"
           />
         </div>
 
@@ -98,13 +89,6 @@ export default async function AdminDashboardPage() {
           >
             <Plus className="w-5 h-5" />
             Add New Restaurant
-          </Link>
-          <Link
-            href="/admin/subscriptions"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-md hover:shadow-lg"
-          >
-            <Store className="w-5 h-5" />
-            Manage Subscriptions
           </Link>
         </div>
 
@@ -128,10 +112,10 @@ export default async function AdminDashboardPage() {
                     Contact
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Status
+                    This Month Orders
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Created
+                    Last Month Orders
                   </th>
                   <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Actions
@@ -148,33 +132,22 @@ export default async function AdminDashboardPage() {
                       <span className="text-sm text-gray-600 font-mono bg-gray-50 px-2 py-1 rounded">/{restaurant.slug}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {restaurant.email || '-'}
+                      <div>{restaurant.email || '-'}</div>
+                      {restaurant.phone && <div className="text-xs text-gray-500">{restaurant.phone}</div>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          restaurant.isActive
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'bg-gray-100 text-gray-700 border border-gray-200'
-                        }`}
-                      >
-                        {restaurant.isActive ? 'Active' : 'Inactive'}
-                      </span>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="text-lg font-bold text-gray-900">{restaurant.currentMonthOrdersCount || 0}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {restaurant.createdAt?.toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className="text-lg font-bold text-gray-900">{restaurant.lastMonthOrdersCount || 0}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center justify-end gap-3">
                         <Link
-                          href={`/${restaurant.slug}`}
+                          href={`/${restaurant.slug}/admin`}
                           target="_blank"
                           className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                          title="View restaurant page"
+                          title="View restaurant admin page"
                         >
                           <Eye className="w-4 h-4" />
                         </Link>

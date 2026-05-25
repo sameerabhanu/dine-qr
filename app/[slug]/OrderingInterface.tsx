@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Plus, Minus, X, Check, Phone } from 'lucide-react';
+import { ORDERING_FEE, CURRENCY } from '@/lib/config';
 
 type MenuItem = {
   id: string;
@@ -105,10 +106,14 @@ export default function OrderingInterface({
     );
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return cart.reduce((sum, item) => {
       return sum + parseFloat(item.menuItem.price) * item.quantity;
     }, 0);
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() + ORDERING_FEE;
   };
 
   const placeOrder = async () => {
@@ -374,7 +379,7 @@ export default function OrderingInterface({
         >
           <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="font-semibold text-xs sm:text-base">{cartItemCount} <span className="hidden sm:inline">items</span></span>
-          <span className="font-bold text-xs sm:text-base">₹{calculateTotal().toFixed(0)}</span>
+          <span className="font-bold text-xs sm:text-base">{CURRENCY.symbol}{calculateTotal().toFixed(0)}</span>
         </button>
       )}
 
@@ -487,10 +492,27 @@ export default function OrderingInterface({
 
             {/* Footer - Compact */}
             <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 space-y-3 sm:space-y-4">
-              <div className="flex items-center justify-between">
+              {/* Subtotal */}
+              <div className="flex items-center justify-between text-gray-600">
+                <span className="text-sm sm:text-base">Subtotal</span>
+                <span className="font-medium text-sm sm:text-base">
+                  {CURRENCY.symbol}{orderPlaced && placedOrderDetails ? (placedOrderDetails.total - ORDERING_FEE).toFixed(0) : calculateSubtotal().toFixed(0)}
+                </span>
+              </div>
+              
+              {/* Ordering Fee */}
+              <div className="flex items-center justify-between text-gray-600">
+                <span className="text-sm sm:text-base">Digital Ordering Fee</span>
+                <span className="font-medium text-sm sm:text-base">
+                  {CURRENCY.symbol}{ORDERING_FEE.toFixed(0)}
+                </span>
+              </div>
+              
+              {/* Total */}
+              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                 <span className="font-semibold text-gray-900 text-sm sm:text-base">Total</span>
                 <span className="font-bold text-gray-900 text-lg sm:text-xl">
-                  ₹{orderPlaced && placedOrderDetails ? placedOrderDetails.total.toFixed(0) : calculateTotal().toFixed(0)}
+                  {CURRENCY.symbol}{orderPlaced && placedOrderDetails ? placedOrderDetails.total.toFixed(0) : calculateTotal().toFixed(0)}
                 </span>
               </div>
               {orderPlaced ? (

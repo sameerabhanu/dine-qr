@@ -1,13 +1,13 @@
 import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { restaurants, orders, menuItems, categories, tables } from '@/lib/db/schema';
-import { eq, desc, and, gte, count } from 'drizzle-orm';
+import { eq, desc, and, gte, count, lte } from 'drizzle-orm';
 import { requireRestaurantAuth } from '@/lib/restaurant-auth';
-import { startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { startOfDay, startOfWeek, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import LogoutButton from '@/components/LogoutButton';
-import { ChefHat, ShoppingBag, TrendingUp, Settings, Menu, Plus } from 'lucide-react';
+import { ChefHat, ShoppingBag, TrendingUp, Settings, Menu, Plus, Calendar } from 'lucide-react';
 
 export default async function RestaurantAdminPage({
   params,
@@ -21,62 +21,14 @@ export default async function RestaurantAdminPage({
 
   // Get today's date
   const today = startOfDay(new Date());
-  const thisWeek = startOfWeek(new Date());
-  const thisMonth = startOfMonth(new Date());
+  const thisMonthStart = startOfMonth(new Date());
+  const lastMonthStart = startOfMonth(subMonths(new Date(), 1));
+  const lastMonthEnd = endOfMonth(subMonths(new Date(), 1));
 
-  // Fetch statistics
-  const [todayOrders] = await db
-    .select({ count: count() })
-    .from(orders)
-    .where(
-      and(
-        eq(orders.restaurantId, restaurant.id),
-        gte(orders.createdAt, today)
-      )
-    );
-
-  const [totalOrders] = await db
-    .select({ count: count() })
-    .from(orders)
-    .where(eq(orders.restaurantId, restaurant.id));
-
-  const allOrders = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.restaurantId, restaurant.id));
-
-  const todayRevenue = allOrders
-    .filter(o => o.createdAt && new Date(o.createdAt) >= today)
-    .reduce((sum, o) => sum + parseFloat(o.totalAmount || '0'), 0);
-
-  const totalRevenue = allOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || '0'), 0);
-
-  const [menuItemsCount] = await db
-    .select({ count: count() })
-    .from(menuItems)
-    .where(eq(menuItems.restaurantId, restaurant.id));
-
-  const [tablesCount] = await db
-    .select({ count: count() })
-    .from(tables)
-    .where(eq(tables.restaurantId, restaurant.id));
-
-  // Fetch today's orders
-  const todayOrdersList = await db
-    .select({
-      order: orders,
-      table: tables,
-    })
-    .from(orders)
-    .leftJoin(tables, eq(orders.tableId, tables.id))
-    .where(
-      and(
-        eq(orders.restaurantId, restaurant.id),
-        gte(orders.createdAt, today)
-      )
-    )
-    .orderBy(desc(orders.createdAt))
-    .limit(50);
+  // Fetch statistics from restaurant table (already counted)
+  const todayOrdersCount = restaurant.todayOrdersCount || 0;
+  const thisMonthOrdersCount = restaurant.currentMonthOrdersCount || 0;
+  const lastMonthOrdersCount = restaurant.lastMonthOrdersCount || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,85 +51,10 @@ export default async function RestaurantAdminPage({
         </div>
       </header>
 
-      {/* Subscription Warning Banners */}
-      {restaurant.subscriptionStatus === 'expiring_soon' && restaurant.subscriptionExpiresAt && (
-        <div className="bg-yellow-50 border-b border-yellow-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 flex-shrink-0 mt-0.5">
-                ⚠️
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base font-semibold text-yellow-900 mb-1">
-                  Subscription Expiring Soon
-                </p>
-                <p className="text-xs sm:text-sm text-yellow-800">
-                  Your subscription expires on {new Date(restaurant.subscriptionExpiresAt).toLocaleDateString('en-IN')} 
-                  ({Math.ceil((new Date(restaurant.subscriptionExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days remaining).
-                  Please contact DineQR support to renew.
-                </p>
-                <p className="text-xs sm:text-sm text-yellow-800 mt-2">
-                  Contact: +91-8333027544 | Email: vanumudemo2@gmail.com
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {restaurant.subscriptionStatus === 'expired' && restaurant.subscriptionExpiresAt && (
-        <div className="bg-orange-50 border-b border-orange-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 flex-shrink-0 mt-0.5">
-                ⚠️
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base font-semibold text-orange-900 mb-1">
-                  URGENT: Subscription Expired
-                </p>
-                <p className="text-xs sm:text-sm text-orange-800">
-                  Your subscription expired on {new Date(restaurant.subscriptionExpiresAt).toLocaleDateString('en-IN')}. 
-                  You have {restaurant.gracePeriodDays || 2} days grace period before your restaurant will be suspended.
-                  After that, ordering will be disabled.
-                </p>
-                <p className="text-xs sm:text-sm text-orange-800 mt-2">
-                  <strong>Contact immediately:</strong> +91-8333027544 | vanumudemo2@gmail.com
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {restaurant.subscriptionStatus === 'suspended' && (
-        <div className="bg-red-50 border-b border-red-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5">
-                🚫
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base font-semibold text-red-900 mb-1">
-                  Restaurant Suspended
-                </p>
-                <p className="text-xs sm:text-sm text-red-800">
-                  Your restaurant has been suspended due to non-payment. Customer ordering is currently disabled.
-                  Please contact DineQR support immediately to reactivate your account.
-                </p>
-                <p className="text-xs sm:text-sm text-red-800 mt-2">
-                  <strong>Contact:</strong> +91-8333027544 | Email: vanumudemo2@gmail.com
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Content - Mobile Responsive */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Stats Grid - Always Side by Side */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 mb-6 sm:mb-8">
+        {/* Stats Grid - Three Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-6 hover:shadow-lg transition">
             <div className="flex items-center justify-between mb-2 sm:mb-4">
               <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
@@ -185,7 +62,17 @@ export default async function RestaurantAdminPage({
               </div>
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mb-1">Today&apos;s Orders</p>
-            <p className="text-xl sm:text-3xl font-bold text-gray-900">{todayOrders.count}</p>
+            <p className="text-xl sm:text-3xl font-bold text-gray-900">{todayOrdersCount}</p>
+          </div>
+
+          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-6 hover:shadow-lg transition">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-gray-900" />
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">This Month&apos;s Orders</p>
+            <p className="text-xl sm:text-3xl font-bold text-gray-900">{thisMonthOrdersCount}</p>
           </div>
 
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-6 hover:shadow-lg transition">
@@ -194,15 +81,13 @@ export default async function RestaurantAdminPage({
                 <TrendingUp className="w-4 h-4 sm:w-6 sm:h-6 text-gray-900" />
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Today&apos;s Revenue</p>
-            <p className="text-xl sm:text-3xl font-bold text-gray-900">
-              {formatCurrency(todayRevenue)}
-            </p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">Last Month&apos;s Orders</p>
+            <p className="text-xl sm:text-3xl font-bold text-gray-900">{lastMonthOrdersCount}</p>
           </div>
         </div>
 
         {/* Quick Actions - Mobile Responsive */}
-        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <Link
@@ -229,73 +114,6 @@ export default async function RestaurantAdminPage({
               <p className="font-semibold text-gray-900 text-sm sm:text-base">Manage Waiters</p>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">Add waiters</p>
             </Link>
-          </div>
-        </div>
-
-        {/* Today's Orders - Mobile Responsive */}
-        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Today&apos;s Orders</h2>
-          </div>
-          <div className="overflow-x-auto">
-            {todayOrdersList.length === 0 ? (
-              <div className="p-8 sm:p-12 text-center">
-                <ShoppingBag className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-3 sm:mb-4" />
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No orders today</h3>
-                <p className="text-sm sm:text-base text-gray-500">Orders will appear here when customers start ordering</p>
-              </div>
-            ) : (
-              <table className="w-full min-w-[640px]">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      Order #
-                    </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      Table
-                    </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      Amount
-                    </th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {todayOrdersList.map(({ order, table }) => (
-                    <tr key={order.id} className="hover:bg-gray-50 transition">
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
-                        #{order.orderNumber}
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                        {table?.tableNumber || 'N/A'}
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
-                        {formatCurrency(parseFloat(order.totalAmount || '0'))}
-                      </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${
-                            order.status === 'completed'
-                              ? 'bg-green-100 text-green-700'
-                              : order.status === 'served'
-                              ? 'bg-blue-100 text-blue-700'
-                              : order.status === 'claimed'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : order.status === 'pending'
-                              ? 'bg-orange-100 text-orange-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { orders } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { orders, restaurants, orderItems } from '@/lib/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { getWaiterAuth } from '@/lib/waiter-auth';
 
 export async function POST(
@@ -36,28 +36,18 @@ export async function POST(
       waiterName: waiter.name,
     });
 
-    // Update order - mark as completed with payment details
-    // Allow if order is claimed OR served by this waiter
-    const result = await db
-      .update(orders)
-      .set({
-        status: 'completed',
-        paymentMethod,
-        paymentStatus: 'completed',
-        servedAt: new Date(), // Set served time if not already set
-        paidAt: new Date(),
-        completedAt: new Date(),
-      })
+    // First, fetch the order to get restaurant ID
+    const [existingOrder] = await db
+      .select()
+      .from(orders)
       .where(
         and(
           eq(orders.id, orderId),
-          eq(orders.waiterId, waiter.id), // Only the waiter who claimed can complete
-          // Allow both 'claimed' and 'served' status
+          eq(orders.waiterId, waiter.id)
         )
-      )
-      .returning();
+      );
 
-    if (result.length === 0) {
+    if (!existingOrder) {
       console.log('⚠️ Order not found or not assigned to this waiter');
       return NextResponse.json(
         { error: 'Order not found or you are not assigned to this order' },
@@ -65,13 +55,57 @@ export async function POST(
       );
     }
 
-    const [completedOrder] = result;
-    console.log('✅ Order completed successfully');
+    // Get current date info for determining which counters to increment
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+    // Determine which counters to increment based on order creation time
+    const orderCreatedAt = new Date(existingOrder.createdAt!);
+    const isToday = orderCreatedAt >= today;
+    const isThisMonth = orderCreatedAt >= monthStart;
+
+    console.log('📊 Incrementing order counters:', {
+      orderId,
+      restaurantId: existingOrder.restaurantId,
+      orderCreatedAt,
+      isToday,
+      isThisMonth,
+    });
+
+    // Increment restaurant order counters
+    const updateData: any = {};
+    if (isToday) {
+      updateData.todayOrdersCount = sql`${restaurants.todayOrdersCount} + 1`;
+    }
+    if (isThisMonth) {
+      updateData.currentMonthOrdersCount = sql`${restaurants.currentMonthOrdersCount} + 1`;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await db
+        .update(restaurants)
+        .set(updateData)
+        .where(eq(restaurants.id, existingOrder.restaurantId));
+    }
+
+    // Delete order items first (foreign key constraint)
+    await db
+      .delete(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+
+    // Delete the order
+    await db
+      .delete(orders)
+      .where(eq(orders.id, orderId));
+
+    console.log('✅ Order completed, counters updated, and order deleted');
 
     return NextResponse.json({
       success: true,
-      order: completedOrder,
-      message: 'Order completed and payment collected',
+      message: 'Order completed, payment collected, and order archived',
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete order';

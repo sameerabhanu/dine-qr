@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { AGENCY_INFO } from './config';
 
 // Gmail SMTP Configuration
 const transporter = nodemailer.createTransport({
@@ -9,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const ADMIN_EMAIL = 'vanumudemo2@gmail.com';
+export const ADMIN_EMAIL = 'ramvanumu07@gmail.com';
 export const ADMIN_PHONE = '+91-8333027544';
 export const BRAND_NAME = 'DineQR';
 
@@ -109,39 +110,21 @@ export async function sendDemoRequestEmail(restaurantData: {
 }
 
 /**
- * Send daily subscription report to admin
+ * Send monthly report email to super admin
  */
-export async function sendDailySubscriptionReport(report: {
-  expiringToday: any[];
-  expiringSoon: any[];
-  expired: any[];
-  suspended: any[];
-  totalActive: number;
+export async function sendMonthlyReport(data: {
+  restaurantName: string;
+  location: string;
+  contact: string;
+  lastMonthOrdersCount: number;
 }) {
-  const { expiringToday, expiringSoon, expired, suspended, totalActive } = report;
-
-  // Only send if there's something to report
-  if (expiringToday.length === 0 && expiringSoon.length === 0 && expired.length === 0 && suspended.length === 0) {
-    console.log('📊 No restaurants to report - skipping email');
-    return { success: true, skipped: true };
-  }
-
-  const formatRestaurant = (r: any) => `
-    <div style="background: #fff; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #000;">
-      <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">${r.name}</div>
-      <div style="font-size: 14px; color: #666;">
-        ${r.subscriptionExpiresAt ? `<div>Expires: ${new Date(r.subscriptionExpiresAt).toLocaleDateString('en-IN')}</div>` : ''}
-        <div>Contact: ${r.phone}</div>
-        ${r.email ? `<div>Email: ${r.email}</div>` : ''}
-      </div>
-    </div>
-  `;
-
   try {
+    console.log('📧 Sending monthly report email...');
+    
     const mailOptions = {
       from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
       to: ADMIN_EMAIL,
-      subject: `📊 DineQR Subscription Report - ${new Date().toLocaleDateString('en-IN')}`,
+      subject: 'Month End Report',
       html: `
         <!DOCTYPE html>
         <html>
@@ -150,179 +133,45 @@ export async function sendDailySubscriptionReport(report: {
               body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
               .header { background: #000; color: #fff; padding: 20px; border-radius: 8px 8px 0 0; }
-              .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; border-top: none; }
-              .section { margin: 30px 0; }
-              .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; padding-left: 10px; border-left: 4px solid; }
-              .urgent { border-color: #dc2626; color: #dc2626; }
-              .warning { border-color: #ea580c; color: #ea580c; }
-              .expired { border-color: #f59e0b; color: #f59e0b; }
-              .summary { background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; }
-              .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-              .button { display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 6px; margin-top: 20px; }
-              .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1 style="margin: 0;">📊 Daily Subscription Report</h1>
-                <p style="margin: 10px 0 0 0; opacity: 0.9;">${new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-              </div>
-              <div class="content">
-                <p style="font-size: 16px;">Hi Admin,</p>
-                <p>Here's your daily subscription status report:</p>
-
-                ${expiringToday.length > 0 ? `
-                  <div class="section">
-                    <div class="section-title urgent">🔴 URGENT - Expiring TODAY (${expiringToday.length})</div>
-                    ${expiringToday.map(formatRestaurant).join('')}
-                  </div>
-                ` : ''}
-
-                ${expiringSoon.length > 0 ? `
-                  <div class="section">
-                    <div class="section-title warning">🟡 EXPIRING IN 3 DAYS (${expiringSoon.length})</div>
-                    ${expiringSoon.map(formatRestaurant).join('')}
-                  </div>
-                ` : ''}
-
-                ${expired.length > 0 ? `
-                  <div class="section">
-                    <div class="section-title expired">🟠 EXPIRED - Grace Period Active (${expired.length})</div>
-                    ${expired.map(formatRestaurant).join('')}
-                  </div>
-                ` : ''}
-
-                ${suspended.length > 0 ? `
-                  <div class="section">
-                    <div class="section-title" style="border-color: #7c3aed; color: #7c3aed;">🔴 SUSPENDED (${suspended.length})</div>
-                    ${suspended.map(formatRestaurant).join('')}
-                  </div>
-                ` : ''}
-
-                <div class="summary">
-                  <h3 style="margin-top: 0;">📊 Summary</h3>
-                  <div class="summary-row">
-                    <span>Total Active:</span>
-                    <strong>${totalActive} restaurants</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Expiring Today:</span>
-                    <strong>${expiringToday.length}</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Expiring in 3 days:</span>
-                    <strong>${expiringSoon.length}</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>In Grace Period:</span>
-                    <strong>${expired.length}</strong>
-                  </div>
-                  <div class="summary-row" style="border-bottom: none;">
-                    <span>Suspended:</span>
-                    <strong>${suspended.length}</strong>
-                  </div>
-                </div>
-
-                <div style="text-align: center;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dineqr-order.vercel.app'}/admin/subscriptions" class="button">
-                    Manage Subscriptions
-                  </a>
-                </div>
-              </div>
-              <div class="footer">
-                <p>DineQR Subscription Management System</p>
-                <p style="font-size: 12px; margin-top: 10px;">This email is sent daily at 9:00 AM IST when there are restaurants requiring attention.</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-
-    console.log('✅ Daily subscription report sent successfully!');
-    console.log('Message ID:', info.messageId);
-    return { success: true, data: info };
-  } catch (error: any) {
-    console.error('❌ Failed to send daily report email:', error);
-    console.error('Error details:', error.message);
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Send suspension notification to admin
- */
-export async function sendSuspensionNotification(restaurant: any) {
-  try {
-    const mailOptions = {
-      from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
-      to: ADMIN_EMAIL,
-      subject: `🔴 Restaurant Suspended - ${restaurant.name}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #dc2626; color: #fff; padding: 20px; border-radius: 8px 8px 0 0; }
               .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
-              .info-box { background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626; }
+              .info-box { background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #000; }
               .info-row { margin: 10px 0; }
               .label { font-weight: bold; color: #000; }
-              .button { display: inline-block; padding: 12px 24px; background: #000; color: #fff; text-decoration: none; border-radius: 6px; margin-top: 20px; }
               .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <h1 style="margin: 0;">🔴 Restaurant Auto-Suspended</h1>
+                <h1 style="margin: 0;">📊 Month End Report</h1>
               </div>
               <div class="content">
                 <p style="font-size: 16px; margin-bottom: 20px;">
-                  A restaurant has been automatically suspended due to subscription expiry.
+                  Hi Ram,
                 </p>
                 
                 <div class="info-box">
                   <div class="info-row">
-                    <span class="label">Restaurant Name:</span> ${restaurant.name}
+                    <span class="label">AGENCY:</span> ${data.restaurantName}
                   </div>
                   <div class="info-row">
-                    <span class="label">Subscription Expired:</span> ${new Date(restaurant.subscriptionExpiresAt).toLocaleDateString('en-IN')}
+                    <span class="label">LOCATION:</span> ${data.location}
                   </div>
                   <div class="info-row">
-                    <span class="label">Suspended At:</span> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                    <span class="label">CONTACT:</span> ${data.contact}
                   </div>
                   <div class="info-row">
-                    <span class="label">Contact:</span> ${restaurant.phone}
+                    <span class="label">LAST MONTH ORDERS COUNT:</span> ${data.lastMonthOrdersCount}
                   </div>
-                  ${restaurant.email ? `
-                  <div class="info-row">
-                    <span class="label">Email:</span> ${restaurant.email}
-                  </div>
-                  ` : ''}
                 </div>
 
                 <p style="margin-top: 30px;">
-                  <strong>Status:</strong><br>
-                  ❌ Restaurant admin and waiters cannot login<br>
-                  ❌ Customer ordering is disabled<br>
-                  ❌ QR codes show "unavailable" message<br>
-                  ✅ All data is preserved
+                  Regards,<br>
+                  <strong>${AGENCY_INFO.name}</strong>
                 </p>
-
-                <div style="text-align: center;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dineqr-order.vercel.app'}/admin/subscriptions" class="button">
-                    Manage Subscriptions
-                  </a>
-                </div>
               </div>
               <div class="footer">
-                <p>DineQR Subscription Management System</p>
+                <p>${BRAND_NAME} Management System</p>
               </div>
             </div>
           </body>
@@ -331,12 +180,12 @@ export async function sendSuspensionNotification(restaurant: any) {
     };
 
     const info = await transporter.sendMail(mailOptions);
-
-    console.log('✅ Suspension notification sent successfully!');
+    
+    console.log(`✅ Monthly report email sent for ${data.restaurantName}`);
     console.log('Message ID:', info.messageId);
     return { success: true, data: info };
   } catch (error: any) {
-    console.error('❌ Error sending suspension notification:', error);
+    console.error('❌ Error sending monthly report email:', error);
     console.error('Error details:', error.message);
     return { success: false, error: error.message };
   }

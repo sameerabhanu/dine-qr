@@ -1,220 +1,154 @@
-import { pgTable, uuid, varchar, text, boolean, timestamp, decimal, integer, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, boolean, timestamp, decimal, integer } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// SUPER ADMINS (You and your team)
+// ============================================
+// SUPER ADMINS TABLE
+// ============================================
 export const superAdmins = pgTable('super_admins', {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
   isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at').defaultNow(),
   lastLoginAt: timestamp('last_login_at'),
 });
 
-// RESTAURANTS (Your clients - multi-tenant)
+// ============================================
+// RESTAURANTS TABLE (Simplified)
+// ============================================
 export const restaurants = pgTable('restaurants', {
   id: uuid('id').primaryKey().defaultRandom(),
-  name: varchar('name', { length: 255 }).notNull(),
-  slug: varchar('slug', { length: 100 }).notNull().unique(),
-  logoUrl: varchar('logo_url', { length: 500 }),
-  phone: varchar('phone', { length: 20 }),
-  email: varchar('email', { length: 255 }),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  phone: text('phone'),
+  email: text('email'),
   address: text('address'),
+  accessCode: text('access_code').notNull(), // 4-digit code
   
-  // Branding
-  primaryColor: varchar('primary_color', { length: 7 }).default('#000000'),
-  secondaryColor: varchar('secondary_color', { length: 7 }).default('#FFFFFF'),
+  // Order count tracking
+  todayOrdersCount: integer('today_orders_count').default(0),
+  currentMonthOrdersCount: integer('current_month_orders_count').default(0),
+  lastMonthOrdersCount: integer('last_month_orders_count').default(0),
   
-  // Settings
+  // Agency info (for monthly reports)
+  agencyName: text('agency_name').default('DineQR'),
+  agencyLocation: text('agency_location').default('India'),
+  agencyContact: text('agency_contact').default('+91-8333027544'),
+});
+
+// ============================================
+// STAFF TABLE (Simplified)
+// ============================================
+export const staff = pgTable('staff', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  role: text('role').notNull().default('waiter'), // 'admin' or 'waiter'
+  accessCode: text('access_code').notNull(), // 4-digit code
   isActive: boolean('is_active').default(true),
-  timezone: varchar('timezone', { length: 50 }).default('Asia/Kolkata'),
-  currency: varchar('currency', { length: 3 }).default('INR'),
-  
-  // Subscription Management
-  subscriptionStatus: varchar('subscription_status', { length: 50 }).default('active'), // active, expiring_soon, expired, suspended, inactive
-  subscriptionExpiresAt: timestamp('subscription_expires_at'),
-  gracePeriodDays: integer('grace_period_days').default(2),
-  suspendedAt: timestamp('suspended_at'),
-  suspensionReason: text('suspension_reason'),
-  lastPaymentAmount: decimal('last_payment_amount', { precision: 10, scale: 2 }),
-  lastPaymentDate: timestamp('last_payment_date'),
-  
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+  lastLoginAt: timestamp('last_login_at'),
 });
 
-// SUBSCRIPTIONS (Track payment status)
-export const subscriptions = pgTable('subscriptions', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
-  
-  status: varchar('status', { length: 50 }).notNull().default('active'), // active, expired, cancelled, grace_period
-  
-  setupFeePaid: boolean('setup_fee_paid').default(false),
-  setupFeeAmount: decimal('setup_fee_amount', { precision: 10, scale: 2 }).default('2499.00'),
-  setupFeePaidAt: timestamp('setup_fee_paid_at'),
-  
-  currentPeriodStart: timestamp('current_period_start'),
-  currentPeriodEnd: timestamp('current_period_end'),
-  nextBillingDate: timestamp('next_billing_date'),
-  lastPaymentDate: timestamp('last_payment_date'),
-  
-  autoRenew: boolean('auto_renew').default(true),
-  paymentMethodId: varchar('payment_method_id', { length: 255 }), // Razorpay customer ID
-  
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-// PAYMENTS (Track all payments)
-export const payments = pgTable('payments', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
-  subscriptionId: uuid('subscription_id').references(() => subscriptions.id, { onDelete: 'set null' }),
-  
-  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
-  currency: varchar('currency', { length: 3 }).default('INR'),
-  type: varchar('type', { length: 50 }).notNull(), // setup_fee, annual_renewal
-  
-  status: varchar('status', { length: 50 }).default('pending'), // pending, success, failed, refunded
-  paymentGateway: varchar('payment_gateway', { length: 50 }).default('razorpay'),
-  gatewayPaymentId: varchar('gateway_payment_id', { length: 255 }),
-  gatewayResponse: jsonb('gateway_response'),
-  
-  paidAt: timestamp('paid_at'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-// TABLES (Each restaurant has multiple tables)
+// ============================================
+// TABLES TABLE (Simplified)
+// ============================================
 export const tables = pgTable('tables', {
   id: uuid('id').primaryKey().defaultRandom(),
   restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
-  
-  tableNumber: varchar('table_number', { length: 20 }).notNull(),
-  qrCode: varchar('qr_code', { length: 100 }).notNull().unique(),
-  capacity: integer('capacity').default(4),
+  tableNumber: integer('table_number').notNull(),
+  qrCode: text('qr_code').notNull().unique(),
   isActive: boolean('is_active').default(true),
-  
-  createdAt: timestamp('created_at').defaultNow(),
 });
 
-// MENU CATEGORIES
+// ============================================
+// CATEGORIES TABLE (Simplified)
+// ============================================
 export const categories = pgTable('categories', {
   id: uuid('id').primaryKey().defaultRandom(),
   restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
-  
-  name: varchar('name', { length: 255 }).notNull(),
+  name: text('name').notNull(),
   displayOrder: integer('display_order').default(0),
-  isActive: boolean('is_active').default(true),
-  
-  createdAt: timestamp('created_at').defaultNow(),
 });
 
-// MENU ITEMS
+// ============================================
+// MENU ITEMS TABLE (Simplified)
+// ============================================
 export const menuItems = pgTable('menu_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
   categoryId: uuid('category_id').notNull().references(() => categories.id, { onDelete: 'cascade' }),
-  
-  name: varchar('name', { length: 255 }).notNull(),
+  name: text('name').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
-  
-  // Food type: veg, egg, non-veg
-  foodType: varchar('food_type', { length: 20 }).default('veg').notNull(),
-  
+  foodType: text('food_type').default('veg'), // 'veg', 'non-veg', 'egg'
   isAvailable: boolean('is_available').default(true),
   displayOrder: integer('display_order').default(0),
-  
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// ORDERS
+// ============================================
+// ORDERS TABLE (Simplified - Auto-deleted on completion)
+// ============================================
 export const orders = pgTable('orders', {
   id: uuid('id').primaryKey().defaultRandom(),
   restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
-  tableId: uuid('table_id').notNull().references(() => tables.id),
+  tableId: uuid('table_id').references(() => tables.id, { onDelete: 'set null' }),
+  waiterId: uuid('waiter_id').references(() => staff.id, { onDelete: 'set null' }),
   
-  orderNumber: varchar('order_number', { length: 50 }).notNull(),
-  status: varchar('status', { length: 50 }).default('pending'), // pending, claimed, served, completed, cancelled
+  tableNumber: integer('table_number'),
+  status: text('status').default('pending'), // 'pending', 'accepted', 'preparing', 'completed'
+  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   
-  // Waiter assignment
-  waiterId: uuid('waiter_id').references(() => staff.id),
-  waiterName: varchar('waiter_name', { length: 255 }),
-  claimedAt: timestamp('claimed_at'),
-  
-  specialInstructions: text('special_instructions'),
-  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }),
-  
-  // Payment details
-  paymentMethod: varchar('payment_method', { length: 50 }), // cash, card, upi
-  paymentStatus: varchar('payment_status', { length: 50 }).default('pending'), // pending, completed
-  paidAt: timestamp('paid_at'),
+  // Digital ordering fee
+  orderingFee: decimal('ordering_fee', { precision: 10, scale: 2 }).default('7.00'),
   
   createdAt: timestamp('created_at').defaultNow(),
-  servedAt: timestamp('served_at'),
-  completedAt: timestamp('completed_at'),
-  cancelledAt: timestamp('cancelled_at'),
 });
 
-// ORDER ITEMS
+// ============================================
+// ORDER ITEMS TABLE
+// ============================================
 export const orderItems = pgTable('order_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   orderId: uuid('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
-  menuItemId: uuid('menu_item_id').notNull().references(() => menuItems.id),
+  menuItemId: uuid('menu_item_id').references(() => menuItems.id, { onDelete: 'set null' }),
   
-  menuItemName: varchar('menu_item_name', { length: 255 }).notNull(), // Store name in case item is deleted
-  quantity: integer('quantity').notNull().default(1),
-  priceAtOrder: decimal('price_at_order', { precision: 10, scale: 2 }).notNull(), // Store price at time of order
-  
-  // Customizations chosen by customer
-  // Example: {"Size": "Large", "Spice Level": "Hot"}
-  customizations: jsonb('customizations').default({}),
-  notes: text('notes'),
-  
+  // Snapshot data
+  menuItemName: text('menu_item_name').notNull(),
+  priceAtOrder: decimal('price_at_order', { precision: 10, scale: 2 }).notNull(),
+  quantity: integer('quantity').notNull(),
   subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
-  
-  createdAt: timestamp('created_at').defaultNow(),
 });
 
-// STAFF (Restaurant staff - owners, kitchen, waiters)
-export const staff = pgTable('staff', {
+// ============================================
+// DEMO REQUESTS TABLE (Simplified)
+// ============================================
+export const demoRequests = pgTable('demo_requests', {
   id: uuid('id').primaryKey().defaultRandom(),
-  restaurantId: uuid('restaurant_id').notNull().references(() => restaurants.id, { onDelete: 'cascade' }),
-  
-  name: varchar('name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }), // Nullable - not required for access code auth
-  passwordHash: varchar('password_hash', { length: 255 }), // Nullable - not required for access code auth
-  accessCode: varchar('access_code', { length: 4 }), // 4-digit PIN for quick login
-  role: varchar('role', { length: 50 }).notNull(), // owner, admin, kitchen, waiter
-  
-  isActive: boolean('is_active').default(true),
-  
-  createdAt: timestamp('created_at').defaultNow(),
-  lastLoginAt: timestamp('last_login_at'),
+  restaurantName: text('restaurant_name').notNull(),
+  ownerName: text('owner_name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  address: text('address'),
+  status: text('status').default('pending'), // 'pending', 'contacted', 'converted', 'rejected'
 });
 
+// ============================================
 // RELATIONS
-export const restaurantsRelations = relations(restaurants, ({ many, one }) => ({
-  subscription: one(subscriptions, {
-    fields: [restaurants.id],
-    references: [subscriptions.restaurantId],
-  }),
+// ============================================
+
+export const restaurantsRelations = relations(restaurants, ({ many }) => ({
+  staff: many(staff),
   tables: many(tables),
   categories: many(categories),
   menuItems: many(menuItems),
   orders: many(orders),
-  staff: many(staff),
-  payments: many(payments),
 }));
 
-export const subscriptionsRelations = relations(subscriptions, ({ one, many }) => ({
+export const staffRelations = relations(staff, ({ one, many }) => ({
   restaurant: one(restaurants, {
-    fields: [subscriptions.restaurantId],
+    fields: [staff.restaurantId],
     references: [restaurants.id],
   }),
-  payments: many(payments),
+  orders: many(orders),
 }));
 
 export const tablesRelations = relations(tables, ({ one, many }) => ({
@@ -271,36 +205,3 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
     references: [menuItems.id],
   }),
 }));
-
-export const staffRelations = relations(staff, ({ one, many }) => ({
-  restaurant: one(restaurants, {
-    fields: [staff.restaurantId],
-    references: [restaurants.id],
-  }),
-  orders: many(orders),
-}));
-
-export const paymentsRelations = relations(payments, ({ one }) => ({
-  restaurant: one(restaurants, {
-    fields: [payments.restaurantId],
-    references: [restaurants.id],
-  }),
-  subscription: one(subscriptions, {
-    fields: [payments.subscriptionId],
-    references: [subscriptions.id],
-  }),
-}));
-
-// DEMO REQUESTS (For new restaurant onboarding)
-export const demoRequests = pgTable('demo_requests', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  restaurantName: varchar('restaurant_name', { length: 255 }).notNull(),
-  ownerName: varchar('owner_name', { length: 255 }).notNull(),
-  email: varchar('email', { length: 255 }).notNull(),
-  phone: varchar('phone', { length: 20 }).notNull(),
-  address: text('address'),
-  status: varchar('status', { length: 50 }).default('pending'), // pending, contacted, approved, rejected
-  notes: text('notes'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
