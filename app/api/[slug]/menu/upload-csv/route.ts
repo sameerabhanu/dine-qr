@@ -112,8 +112,6 @@ export async function POST(
             restaurantId: restaurant.id,
             name: categoryName,
             displayOrder: categoriesCreated,
-            isActive: true,
-            createdAt: new Date(),
           })
           .returning();
         
@@ -155,7 +153,6 @@ export async function POST(
           foodType,
           isAvailable: true,
           displayOrder: 0,
-          createdAt: new Date(),
         });
 
         itemsCreated++;

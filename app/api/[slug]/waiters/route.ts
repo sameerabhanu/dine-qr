@@ -78,7 +78,6 @@ export async function POST(
         accessCode: pin,
         role: 'waiter',
         isActive: true,
-        createdAt: new Date(),
       })
       .returning();
 

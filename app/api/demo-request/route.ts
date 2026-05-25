@@ -44,8 +44,6 @@ export async function POST(request: NextRequest) {
         phone,
         address: address || null,
         status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       })
       .returning();
 
