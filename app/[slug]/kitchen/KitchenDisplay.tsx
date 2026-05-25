@@ -12,7 +12,6 @@ type Order = {
   items: Array<{
     id: string;
     quantity: number;
-    notes: string | null;
     menuItem: any;
   }>;
 };
@@ -225,11 +224,6 @@ export default function KitchenDisplay({
                         <p className="font-semibold text-gray-900">
                           {item.menuItem?.name || 'Unknown Item'}
                         </p>
-                        {item.notes && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            Note: {item.notes}
-                          </p>
-                        )}
                       </div>
                     </div>
                   ))}

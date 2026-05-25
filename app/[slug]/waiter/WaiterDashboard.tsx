@@ -588,9 +588,6 @@ export default function WaiterDashboard({
                               <span className="text-gray-900 font-medium text-xs sm:text-sm block">
                                 {item.quantity}x {item.menuItemName}
                               </span>
-                              {item.notes && (
-                                <p className="text-xs text-gray-500 mt-1 break-words">Note: {item.notes}</p>
-                              )}
                             </div>
                             <span className="text-gray-700 font-medium text-xs sm:text-sm flex-shrink-0">
                               ₹{parseFloat(item.subtotal).toFixed(0)}
@@ -598,14 +595,6 @@ export default function WaiterDashboard({
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  {order.specialInstructions && (
-                    <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-xl">
-                      <p className="text-xs sm:text-sm text-yellow-800 break-words">
-                        <span className="font-semibold">Note:</span> {order.specialInstructions}
-                      </p>
                     </div>
                   )}
 
@@ -682,9 +671,6 @@ export default function WaiterDashboard({
                               <span className="text-gray-900 font-medium text-xs sm:text-sm block">
                                 {item.quantity}x {item.menuItemName}
                               </span>
-                              {item.notes && (
-                                <p className="text-xs text-gray-500 mt-1 break-words">Note: {item.notes}</p>
-                              )}
                             </div>
                             <span className="text-gray-700 font-medium text-xs sm:text-sm flex-shrink-0">
                               ₹{parseFloat(item.subtotal).toFixed(0)}
@@ -692,14 +678,6 @@ export default function WaiterDashboard({
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  {order.specialInstructions && (
-                    <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-xl">
-                      <p className="text-xs sm:text-sm text-yellow-800 break-words">
-                        <span className="font-semibold">Note:</span> {order.specialInstructions}
-                      </p>
                     </div>
                   )}
 
