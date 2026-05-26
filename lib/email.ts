@@ -15,7 +15,7 @@ export const ADMIN_PHONE = '+91-8333027544';
 export const BRAND_NAME = 'DineQR';
 
 /**
- * Send demo request notification to admin
+ * Send demo request notification to agency manager
  */
 export async function sendDemoRequestEmail(restaurantData: {
   name: string;
@@ -28,12 +28,20 @@ export async function sendDemoRequestEmail(restaurantData: {
     console.log('📧 Attempting to send demo request email via Gmail SMTP...');
     console.log('Gmail user exists:', !!process.env.GMAIL_USER);
     console.log('Gmail password exists:', !!process.env.GMAIL_APP_PASSWORD);
-    console.log('Admin email:', ADMIN_EMAIL);
+    
+    const agencyEmail = process.env.AGENCY_MANAGER_EMAIL;
+    
+    if (!agencyEmail) {
+      console.error('⚠️ AGENCY_MANAGER_EMAIL not configured, cannot send demo request email');
+      return { success: false, error: 'Agency manager email not configured' };
+    }
+    
+    console.log('Agency manager email:', agencyEmail);
     console.log('Restaurant data:', restaurantData.name);
     
     const mailOptions = {
       from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
-      to: ADMIN_EMAIL,
+      to: agencyEmail,
       subject: `🎯 New Demo Request - ${restaurantData.name}`,
       html: `
         <!DOCTYPE html>
