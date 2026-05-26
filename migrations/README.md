@@ -47,6 +47,16 @@ DATABASE_URL=your_pooler_connection_string
 NEXT_PUBLIC_SUPABASE_URL=your_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Agency Manager Email (for monthly reports)
+AGENCY_MANAGER_EMAIL=agency-owner@example.com
+
+# Gmail SMTP (for sending emails)
+GMAIL_USER=your-gmail@gmail.com
+GMAIL_APP_PASSWORD=your-app-password
+
+# Cron Secret (for secure cron endpoints)
+CRON_SECRET=your-random-secret-key-change-this
 ```
 
 ### Step 6: Verify Installation
@@ -82,9 +92,39 @@ After running the schema, you can login with:
 ✅ 4-digit PIN authentication for staff  
 ✅ Real-time order updates (Supabase Realtime)  
 ✅ Auto-delete orders after completion (only counts kept)  
-✅ Monthly report email system  
-✅ Multi-tenant (multiple restaurants)  
+✅ Monthly report email system (Ram + Agency Manager)  
+✅ Daily & monthly counter rollover via Vercel Cron  
+✅ Multi-tenant (multiple restaurants per agency)  
 ✅ PWA support with background notifications  
+
+## 🔄 Automated Cron Jobs
+
+The system includes two automated cron jobs configured in `vercel.json`:
+
+### 1. Daily Reset (00:00 every day)
+- **Endpoint**: `/api/cron/daily-reset`
+- **Schedule**: `0 0 * * *`
+- **Function**: Resets `today_orders_count` to 0 for all restaurants
+
+### 2. Monthly Report (1st day of month at 00:00)
+- **Endpoint**: `/api/cron/monthly-report`
+- **Schedule**: `0 0 1 * *`
+- **Function**: 
+  1. Rolls over counters: `last_month_orders_count = current_month_orders_count`
+  2. Resets `current_month_orders_count` to 0
+  3. Sends summary email to Ram (freelancer) with agency total
+  4. Sends detailed table email to Agency Manager with all restaurant data
+
+**Email 1 (To Ram):**
+```
+AGENCY: [Name]
+LOCATION: [City]
+CONTACT: [Phone]
+LAST MONTH ORDERS: [Total Count]
+```
+
+**Email 2 (To Agency Manager):**
+Detailed HTML table with all restaurants and their last month orders.  
 
 ## 🔧 Troubleshooting
 

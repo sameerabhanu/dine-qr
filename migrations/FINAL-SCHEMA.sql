@@ -10,6 +10,12 @@
 -- - Digital ordering fee model
 -- - Supabase Realtime enabled
 -- - RLS disabled for internal app access
+-- - Daily & monthly counter rollover via cron jobs
+-- ============================================
+--
+-- AUTOMATED CRON JOBS (configured in vercel.json):
+-- 1. Daily Reset (00:00): Resets today_orders_count to 0
+-- 2. Monthly Report (1st at 00:00): Rolls over counters + sends emails
 -- ============================================
 
 -- ============================================

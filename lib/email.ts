@@ -110,21 +110,22 @@ export async function sendDemoRequestEmail(restaurantData: {
 }
 
 /**
- * Send monthly report email to super admin
+ * Send monthly report email to Ram (Freelancer)
+ * Simple 4-line summary of agency's total orders
  */
-export async function sendMonthlyReport(data: {
-  restaurantName: string;
-  location: string;
-  contact: string;
+export async function sendMonthlyReportToRam(data: {
+  agencyName: string;
+  agencyLocation: string;
+  agencyContact: string;
   lastMonthOrdersCount: number;
 }) {
   try {
-    console.log('📧 Sending monthly report email...');
+    console.log('📧 Sending monthly report to Ram...');
     
     const mailOptions = {
       from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
-      to: ADMIN_EMAIL,
-      subject: 'Month End Report',
+      to: ADMIN_EMAIL, // ramvanumu07@gmail.com
+      subject: `Monthly Report - ${data.agencyName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -132,42 +133,137 @@ export async function sendMonthlyReport(data: {
             <style>
               body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 8px; }
+              .info-row { margin: 15px 0; font-size: 16px; }
+              .label { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="content">
+                <div class="info-row">
+                  <span class="label">AGENCY:</span> ${data.agencyName}
+                </div>
+                <div class="info-row">
+                  <span class="label">LOCATION:</span> ${data.agencyLocation}
+                </div>
+                <div class="info-row">
+                  <span class="label">CONTACT:</span> ${data.agencyContact}
+                </div>
+                <div class="info-row">
+                  <span class="label">LAST MONTH ORDERS:</span> ${data.lastMonthOrdersCount}
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log(`✅ Monthly report sent to Ram for ${data.agencyName}`);
+    console.log('Message ID:', info.messageId);
+    return { success: true, data: info };
+  } catch (error: any) {
+    console.error('❌ Error sending report to Ram:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send monthly report email to Agency Manager
+ * Detailed table with all restaurants under the agency
+ */
+export async function sendMonthlyReportToAgency(data: {
+  agencyName: string;
+  restaurants: Array<{
+    name: string;
+    location: string;
+    phone: string;
+    lastMonthOrders: number;
+  }>;
+  totalOrders: number;
+}) {
+  try {
+    console.log('📧 Sending monthly report to Agency Manager...');
+    
+    const agencyEmail = process.env.AGENCY_MANAGER_EMAIL;
+    
+    if (!agencyEmail) {
+      console.warn('⚠️ AGENCY_MANAGER_EMAIL not configured, skipping agency email');
+      return { success: false, error: 'Agency email not configured' };
+    }
+
+    // Generate table rows
+    const tableRows = data.restaurants
+      .map(
+        (r) => `
+        <tr>
+          <td style="padding: 12px; border: 1px solid #ddd;">${r.name}</td>
+          <td style="padding: 12px; border: 1px solid #ddd;">${r.location}</td>
+          <td style="padding: 12px; border: 1px solid #ddd;">${r.phone}</td>
+          <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">${r.lastMonthOrders}</td>
+        </tr>
+      `
+      )
+      .join('');
+
+    const mailOptions = {
+      from: `"${BRAND_NAME}" <${process.env.GMAIL_USER}>`,
+      to: agencyEmail,
+      subject: `Monthly Report - ${data.agencyName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 800px; margin: 0 auto; padding: 20px; }
               .header { background: #000; color: #fff; padding: 20px; border-radius: 8px 8px 0 0; }
               .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
-              .info-box { background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #000; }
-              .info-row { margin: 10px 0; }
-              .label { font-weight: bold; color: #000; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+              th { background: #000; color: white; padding: 12px; text-align: left; border: 1px solid #ddd; }
+              .total-row { background: #f0f0f0; font-weight: bold; }
               .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
-                <h1 style="margin: 0;">📊 Month End Report</h1>
+                <h1 style="margin: 0;">📊 Monthly Report - ${data.agencyName}</h1>
               </div>
               <div class="content">
                 <p style="font-size: 16px; margin-bottom: 20px;">
-                  Hi Ram,
+                  Dear Manager,
+                </p>
+                <p>
+                  Here's your monthly performance report for all restaurants:
                 </p>
                 
-                <div class="info-box">
-                  <div class="info-row">
-                    <span class="label">AGENCY:</span> ${data.restaurantName}
-                  </div>
-                  <div class="info-row">
-                    <span class="label">LOCATION:</span> ${data.location}
-                  </div>
-                  <div class="info-row">
-                    <span class="label">CONTACT:</span> ${data.contact}
-                  </div>
-                  <div class="info-row">
-                    <span class="label">LAST MONTH ORDERS COUNT:</span> ${data.lastMonthOrdersCount}
-                  </div>
-                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Restaurant Name</th>
+                      <th>Location</th>
+                      <th>Mobile Number</th>
+                      <th style="text-align: right;">Last Month Orders</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tableRows}
+                    <tr class="total-row">
+                      <td style="padding: 12px; border: 1px solid #ddd;">TOTAL</td>
+                      <td style="padding: 12px; border: 1px solid #ddd;"></td>
+                      <td style="padding: 12px; border: 1px solid #ddd;"></td>
+                      <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">${data.totalOrders}</td>
+                    </tr>
+                  </tbody>
+                </table>
 
                 <p style="margin-top: 30px;">
                   Regards,<br>
-                  <strong>${AGENCY_INFO.name}</strong>
+                  <strong>${BRAND_NAME} Team</strong>
                 </p>
               </div>
               <div class="footer">
@@ -181,12 +277,11 @@ export async function sendMonthlyReport(data: {
 
     const info = await transporter.sendMail(mailOptions);
     
-    console.log(`✅ Monthly report email sent for ${data.restaurantName}`);
+    console.log(`✅ Monthly report sent to Agency Manager for ${data.agencyName}`);
     console.log('Message ID:', info.messageId);
     return { success: true, data: info };
   } catch (error: any) {
-    console.error('❌ Error sending monthly report email:', error);
-    console.error('Error details:', error.message);
+    console.error('❌ Error sending report to Agency:', error);
     return { success: false, error: error.message };
   }
 }
