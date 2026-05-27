@@ -461,6 +461,14 @@ export default function WaiterDashboard({
       const timeB = new Date(b.order.createdAt).getTime();
       return timeA - timeB; // Oldest first
     });
+    
+    // Debug logging
+    console.log('📊 Table orders after sorting:', table.orders.map((o, idx) => ({
+      index: idx,
+      orderId: o.order.id,
+      createdAt: o.order.createdAt,
+      timeAgo: formatDistanceToNow(new Date(o.order.createdAt), { addSuffix: true })
+    })));
   });
   
   const groupedMyOrdersArray = Object.values(groupedMyOrders);
