@@ -413,6 +413,80 @@ export default function WaiterDashboard({
     }
   };
 
+  // Group orders by table for "My Orders" section
+  const groupedMyOrders = myOrders.reduce((acc, orderData) => {
+    const tableId = orderData.table?.id || 'no-table';
+    const tableNumber = orderData.table?.tableNumber || 'N/A';
+    
+    if (!acc[tableId]) {
+      acc[tableId] = {
+        tableId,
+        tableNumber,
+        table: orderData.table,
+        orders: [],
+        allItems: [],
+        totalAmount: 0,
+        firstOrderTime: orderData.order.createdAt,
+      };
+    }
+    
+    acc[tableId].orders.push(orderData.order);
+    acc[tableId].allItems.push(...orderData.items);
+    acc[tableId].totalAmount += parseFloat(orderData.order.totalAmount || '0');
+    
+    // Keep the earliest order time
+    if (orderData.order.createdAt < acc[tableId].firstOrderTime) {
+      acc[tableId].firstOrderTime = orderData.order.createdAt;
+    }
+    
+    return acc;
+  }, {} as Record<string, {
+    tableId: string;
+    tableNumber: string | number;
+    table: any;
+    orders: any[];
+    allItems: any[];
+    totalAmount: number;
+    firstOrderTime: any;
+  }>);
+  
+  const groupedMyOrdersArray = Object.values(groupedMyOrders);
+
+  // Complete all orders for a specific table
+  const handleCompleteTableOrders = async (tableId: string, orderIds: string[], paymentMethod: string) => {
+    setCompletingId(tableId);
+    setError('');
+
+    try {
+      // Complete all orders for this table sequentially
+      for (const orderId of orderIds) {
+        const response = await fetch(`/api/${slug}/orders/${orderId}/payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentMethod }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || `Failed to complete order ${orderId.substring(0, 8)}`);
+          setCompletingId(null);
+          return;
+        }
+      }
+
+      // Optimistically remove all orders for this table from UI
+      setMyOrders(prev => prev.filter(o => o.table?.id !== tableId));
+      setPendingOrders(prev => prev.filter(o => o.table?.id !== tableId));
+      
+      console.log(`✅ All orders for table ${tableId} completed and removed from UI`);
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setCompletingId(null);
+    }
+  };
+
   const handleCompleteOrder = async (orderId: string, paymentMethod: string) => {
     setCompletingId(orderId);
     setError('');
@@ -640,54 +714,58 @@ export default function WaiterDashboard({
           )}
         </div>
 
-        {/* My Orders Section - Mobile Responsive */}
+        {/* My Orders Section - Mobile Responsive - Grouped by Table */}
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-            My Orders ({myOrders.length})
+            My Orders ({myOrders.length} {myOrders.length === 1 ? 'order' : 'orders'}, {groupedMyOrdersArray.length} {groupedMyOrdersArray.length === 1 ? 'table' : 'tables'})
           </h2>
           
-          {myOrders.length === 0 ? (
+          {groupedMyOrdersArray.length === 0 ? (
             <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
               <p className="text-sm sm:text-base text-gray-500">You have no orders in progress</p>
             </div>
           ) : (
             <div className="grid gap-3 sm:gap-4">
-              {myOrders.map(({ order, table, items }) => (
+              {groupedMyOrdersArray.map((groupedTable) => (
                 <div
-                  key={order.id}
+                  key={groupedTable.tableId}
                   className="bg-white rounded-xl sm:rounded-2xl border-2 border-green-200 p-3 sm:p-4 md:p-6"
                 >
                   <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                         <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
-                          Table {table?.tableNumber || 'N/A'}
+                          Table {groupedTable.tableNumber}
                         </h3>
-                        <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
-                          #{order.id.substring(0, 8)}
-                        </span>
+                        {groupedTable.orders.length > 1 && (
+                          <span className="text-xs sm:text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                            {groupedTable.orders.length} orders
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-600 truncate">
-                        Claimed {order.createdAt ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true }) : 'Just now'}
+                        Started {groupedTable.firstOrderTime ? formatDistanceToNow(new Date(groupedTable.firstOrderTime), { addSuffix: true }) : 'Just now'}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <span className="text-xl sm:text-2xl font-bold text-gray-900">
-                        ₹{parseFloat(order.totalAmount || '0').toFixed(0)}
+                        ₹{groupedTable.totalAmount.toFixed(0)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Order Items - Mobile Responsive */}
-                  {items && items.length > 0 && (
+                  {/* All Order Items - Mobile Responsive */}
+                  {groupedTable.allItems && groupedTable.allItems.length > 0 && (
                     <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl">
                       <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                         <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" />
-                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Order Items</h4>
+                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
+                          All Items ({groupedTable.allItems.length})
+                        </h4>
                       </div>
                       <div className="space-y-1.5 sm:space-y-2">
-                        {items.map((item) => (
+                        {groupedTable.allItems.map((item) => (
                           <div key={item.id} className="flex justify-between items-start gap-2">
                             <div className="flex-1 min-w-0">
                               <span className="text-gray-900 font-medium text-xs sm:text-sm block">
@@ -704,11 +782,15 @@ export default function WaiterDashboard({
                   )}
 
                   <button
-                    onClick={() => handleCompleteOrder(order.id, 'cash')}
-                    disabled={completingId === order.id}
+                    onClick={() => handleCompleteTableOrders(
+                      groupedTable.tableId,
+                      groupedTable.orders.map(o => o.id),
+                      'cash'
+                    )}
+                    disabled={completingId === groupedTable.tableId}
                     className="w-full py-2.5 sm:py-3 bg-green-600 text-white rounded-lg sm:rounded-xl hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                   >
-                    {completingId === order.id ? (
+                    {completingId === groupedTable.tableId ? (
                       <>
                         <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         Completing...
@@ -716,7 +798,7 @@ export default function WaiterDashboard({
                     ) : (
                       <>
                         <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        Mark as Completed
+                        Complete Table Service
                       </>
                     )}
                   </button>
