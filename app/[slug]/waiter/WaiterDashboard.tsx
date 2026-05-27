@@ -788,10 +788,12 @@ export default function WaiterDashboard({
                   </div>
 
                   {/* Separate Orders - Each with its own items and served toggle */}
+                  {/* Display in reverse order (newest first) but keep original numbering */}
                   <div className="space-y-3 sm:space-y-4 mb-4">
-                    {[...groupedTable.orders].reverse().map(({ order, items }, reverseIndex) => {
-                      // Calculate the actual order number (first order = #1, last order = #N)
-                      const orderNumber = groupedTable.orders.length - reverseIndex;
+                    {[...groupedTable.orders].reverse().map(({ order, items }, index) => {
+                      // After reversing: index 0 = newest order (should be highest number)
+                      // We want: newest = Order #N, oldest = Order #1
+                      const orderNumber = groupedTable.orders.length - index;
                       
                       return (
                       <div 
