@@ -905,7 +905,7 @@ export default function WaiterDashboard({
           
           // Group items by menuItemName and combine quantities
           const combinedItems = allItems.reduce((acc, item) => {
-            const existingItem = acc.find(i => i.menuItemName === item.menuItemName && i.priceAtOrder === item.priceAtOrder);
+            const existingItem = acc.find((i: typeof item) => i.menuItemName === item.menuItemName && i.priceAtOrder === item.priceAtOrder);
             if (existingItem) {
               // Item already exists, add quantity and subtotal
               existingItem.quantity += item.quantity;
