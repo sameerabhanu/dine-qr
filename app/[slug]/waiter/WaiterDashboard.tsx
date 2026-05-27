@@ -861,10 +861,10 @@ export default function WaiterDashboard({
                   <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <button
                       onClick={() => setShowBill(groupedTable.tableId)}
-                      className="py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg sm:rounded-xl hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
+                      className="py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg sm:rounded-xl hover:bg-gray-800 transition font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
                       <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Generate Bill
+                      Bill
                     </button>
                     
                     <button
@@ -895,7 +895,7 @@ export default function WaiterDashboard({
           )}
         </div>
 
-        {/* Bill Modal - Detailed itemized bill with digital ordering fee */}
+        {/* Bill Modal - Clean table format */}
         {showBill && (() => {
           const tableData = groupedMyOrdersArray.find(t => t.tableId === showBill);
           if (!tableData) return null;
@@ -909,89 +909,72 @@ export default function WaiterDashboard({
           
           return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-              <div className="bg-white rounded-xl sm:rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-4 sm:p-6">
+                  {/* Header */}
                   <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Bill</h2>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Bill - Table {tableData.tableNumber}</h2>
+                      <p className="text-sm text-gray-600 mt-1">{orderCount} {orderCount === 1 ? 'order' : 'orders'}</p>
+                    </div>
                     <button
                       onClick={() => setShowBill(null)}
-                      className="text-gray-500 hover:text-gray-900 p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition"
+                      className="text-gray-500 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition"
                     >
-                      <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
 
-                  {/* Restaurant Info */}
-                  <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
-                    <h3 className="font-bold text-base sm:text-lg">{restaurant.name}</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">{restaurant.address || ''}</p>
-                    <p className="text-xs sm:text-sm text-gray-600">{restaurant.phone || ''}</p>
+                  {/* Items Table */}
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100 border-b-2 border-gray-300">
+                          <th className="text-left py-3 px-3 text-sm font-semibold text-gray-700">Item Name</th>
+                          <th className="text-center py-3 px-3 text-sm font-semibold text-gray-700">Qty</th>
+                          <th className="text-right py-3 px-3 text-sm font-semibold text-gray-700">Price</th>
+                          <th className="text-right py-3 px-3 text-sm font-semibold text-gray-700">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {allItems.map((item, index) => (
+                          <tr key={item.id || index} className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="py-3 px-3 text-sm text-gray-900">{item.menuItemName}</td>
+                            <td className="py-3 px-3 text-sm text-center text-gray-700">{item.quantity}</td>
+                            <td className="py-3 px-3 text-sm text-right text-gray-700">₹{parseFloat(item.priceAtOrder).toFixed(0)}</td>
+                            <td className="py-3 px-3 text-sm text-right font-medium text-gray-900">₹{parseFloat(item.subtotal).toFixed(0)}</td>
+                          </tr>
+                        ))}
+                        
+                        {/* Items Subtotal */}
+                        <tr className="border-t-2 border-gray-300 bg-gray-50">
+                          <td colSpan={3} className="py-3 px-3 text-sm font-semibold text-gray-900 text-right">Items Subtotal:</td>
+                          <td className="py-3 px-3 text-sm font-semibold text-right text-gray-900">₹{itemsSubtotal.toFixed(0)}</td>
+                        </tr>
+                        
+                        {/* Digital Ordering Fee */}
+                        <tr className="border-b border-gray-200">
+                          <td colSpan={3} className="py-3 px-3 text-sm text-blue-700 text-right">
+                            Digital Ordering Fee (₹{ORDERING_FEE} × {orderCount} {orderCount === 1 ? 'order' : 'orders'}):
+                          </td>
+                          <td className="py-3 px-3 text-sm font-medium text-right text-blue-700">₹{digitalOrderingFee.toFixed(0)}</td>
+                        </tr>
+                        
+                        {/* Grand Total */}
+                        <tr className="bg-green-50 border-t-2 border-green-600">
+                          <td colSpan={3} className="py-4 px-3 text-base font-bold text-gray-900 text-right">Grand Total:</td>
+                          <td className="py-4 px-3 text-lg font-bold text-right text-green-600">₹{grandTotal.toFixed(0)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
-                  {/* Table Info */}
-                  <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
-                    <div className="flex justify-between text-xs sm:text-sm mb-2">
-                      <span className="text-gray-600">Table:</span>
-                      <span className="font-semibold">{tableData.tableNumber}</span>
-                    </div>
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-600">Number of Orders:</span>
-                      <span className="font-semibold">{orderCount}</span>
-                    </div>
-                  </div>
-
-                  {/* Items List */}
-                  <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
-                    <h4 className="font-semibold mb-3 text-sm sm:text-base">Items</h4>
-                    <div className="space-y-2">
-                      {allItems.map((item, index) => (
-                        <div key={item.id || index} className="flex justify-between text-xs sm:text-sm">
-                          <div className="flex-1 pr-2">
-                            <span className="font-medium">{item.menuItemName}</span>
-                            <div className="text-gray-500">
-                              Qty: {item.quantity} × ₹{parseFloat(item.priceAtOrder).toFixed(0)}
-                            </div>
-                          </div>
-                          <span className="font-semibold flex-shrink-0">₹{parseFloat(item.subtotal).toFixed(0)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Bill Summary */}
-                  <div className="space-y-2 mb-4 sm:mb-6">
-                    <div className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-600">Items Subtotal:</span>
-                      <span className="font-medium">₹{itemsSubtotal.toFixed(0)}</span>
-                    </div>
-                    
-                    {/* Digital Ordering Fee Section */}
-                    <div className="pt-2 border-t border-gray-200">
-                      <div className="flex justify-between text-xs sm:text-sm text-blue-700 mb-1">
-                        <span className="font-medium">Digital Ordering Fee:</span>
-                        <span className="font-medium">₹{ORDERING_FEE} × {orderCount} orders</span>
-                      </div>
-                      <div className="flex justify-between text-xs sm:text-sm text-blue-700">
-                        <span className="font-medium">Total Ordering Fee:</span>
-                        <span className="font-semibold">₹{digitalOrderingFee.toFixed(0)}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between font-bold text-base sm:text-lg pt-3 border-t-2 border-gray-300">
-                      <span>Grand Total:</span>
-                      <span className="text-green-600">₹{grandTotal.toFixed(0)}</span>
-                    </div>
-                  </div>
-
+                  {/* Close Button */}
                   <button
-                    onClick={() => {
-                      setShowBill(null);
-                      window.print();
-                    }}
-                    className="w-full py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg sm:rounded-xl hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2"
+                    onClick={() => setShowBill(null)}
+                    className="w-full py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-semibold"
                   >
-                    <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
-                    Print Bill
+                    Close
                   </button>
                 </div>
               </div>
