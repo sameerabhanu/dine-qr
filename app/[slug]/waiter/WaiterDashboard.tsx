@@ -250,6 +250,15 @@ export default function WaiterDashboard({
           console.log('📥 New order created:', payload);
           const newOrder = payload.new as any;
           
+          // Check if this order should be visible to this waiter
+          // Only show if: waiterId is null OR waiterId matches this waiter
+          const shouldShowToThisWaiter = !newOrder.waiter_id || newOrder.waiter_id === waiter.id;
+          
+          if (!shouldShowToThisWaiter) {
+            console.log('🚫 Order assigned to different waiter, skipping');
+            return;
+          }
+          
           // Fetch the complete order with table and items data
           try {
             const response = await fetch(`/api/${slug}/orders/${newOrder.id}/details`);
