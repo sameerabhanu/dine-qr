@@ -900,9 +900,28 @@ export default function WaiterDashboard({
           const tableData = groupedMyOrdersArray.find(t => t.tableId === showBill);
           if (!tableData) return null;
           
-          // Calculate all items across all orders
+          // Calculate all items across all orders and combine duplicates
           const allItems = tableData.orders.flatMap(o => o.items);
-          const itemsSubtotal = allItems.reduce((sum, item) => sum + parseFloat(item.subtotal), 0);
+          
+          // Group items by menuItemName and combine quantities
+          const combinedItems = allItems.reduce((acc, item) => {
+            const existingItem = acc.find(i => i.menuItemName === item.menuItemName && i.priceAtOrder === item.priceAtOrder);
+            if (existingItem) {
+              // Item already exists, add quantity and subtotal
+              existingItem.quantity += item.quantity;
+              existingItem.subtotal = (parseFloat(existingItem.subtotal) + parseFloat(item.subtotal)).toString();
+            } else {
+              // New item, add to array
+              acc.push({
+                ...item,
+                quantity: item.quantity,
+                subtotal: item.subtotal
+              });
+            }
+            return acc;
+          }, [] as typeof allItems);
+          
+          const itemsSubtotal = combinedItems.reduce((sum, item) => sum + parseFloat(item.subtotal), 0);
           const orderCount = tableData.orders.length;
           const digitalOrderingFee = ORDERING_FEE * orderCount;
           const grandTotal = itemsSubtotal + digitalOrderingFee;
@@ -937,7 +956,7 @@ export default function WaiterDashboard({
                         </tr>
                       </thead>
                       <tbody>
-                        {allItems.map((item, index) => (
+                        {combinedItems.map((item, index) => (
                           <tr key={item.id || index} className="border-b border-gray-200 hover:bg-gray-50">
                             <td className="py-3 px-3 text-sm text-gray-900">{item.menuItemName}</td>
                             <td className="py-3 px-3 text-sm text-center text-gray-700">{item.quantity}</td>
