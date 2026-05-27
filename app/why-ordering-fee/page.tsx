@@ -102,28 +102,6 @@ export default function WhyOrderingFeePage() {
           </div>
         </div>
 
-        {/* Value Comparison */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 border border-green-200 mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Putting It In Perspective</h2>
-          <p className="text-gray-700 mb-6">
-            At just ₹8 per order, our digital ordering fee is less than the cost of:
-          </p>
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl p-4 text-center">
-              <p className="text-3xl font-bold text-gray-900 mb-1">₹10</p>
-              <p className="text-sm text-gray-600">Service charge at most restaurants</p>
-            </div>
-            <div className="bg-white rounded-xl p-4 text-center">
-              <p className="text-3xl font-bold text-gray-900 mb-1">₹15</p>
-              <p className="text-sm text-gray-600">Average parking fee</p>
-            </div>
-            <div className="bg-white rounded-xl p-4 text-center">
-              <p className="text-3xl font-bold text-gray-900 mb-1">₹20</p>
-              <p className="text-sm text-gray-600">Delivery platform fees</p>
-            </div>
-          </div>
-        </div>
-
         {/* How It Helps */}
         <div className="bg-white rounded-2xl p-8 border border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">How This Fee Helps Restaurants</h2>
