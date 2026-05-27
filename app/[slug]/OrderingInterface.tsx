@@ -422,6 +422,24 @@ export default function OrderingInterface({
             {/* Cart Items - Single Line Compact Structure */}
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4">
               <div className="divide-y divide-gray-200">
+                {/* Free Water Bottle - Always shown */}
+                <div className="py-2 sm:py-2.5 bg-green-50">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xs">💧</span>
+                    </div>
+                    <span className="flex-1 min-w-0 text-xs sm:text-sm font-medium text-green-900 truncate">
+                      Water Bottle 500ML (FREE)
+                    </span>
+                    <span className="text-xs sm:text-sm text-gray-500 line-through flex-shrink-0">
+                      ₹10
+                    </span>
+                    <span className="w-16 sm:w-20 text-xs sm:text-sm font-semibold text-green-700 text-right flex-shrink-0">
+                      ₹0
+                    </span>
+                  </div>
+                </div>
+
                 {orderPlaced && placedOrderDetails ? (
                   // Show placed order items - Compact
                   placedOrderDetails.items.map((item, index) => (
