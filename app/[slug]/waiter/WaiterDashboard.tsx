@@ -474,7 +474,7 @@ export default function WaiterDashboard({
   const groupedMyOrdersArray = Object.values(groupedMyOrders);
 
   // Debug logging for grouped orders
-  React.useEffect(() => {
+  useEffect(() => {
     if (groupedMyOrdersArray.length > 0) {
       console.log('🔍 GROUPED MY ORDERS:', groupedMyOrdersArray.map(table => ({
         tableNumber: table.tableNumber,
