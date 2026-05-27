@@ -142,18 +142,30 @@ export default function OrderingInterface({
 
     // Place order in background
     try {
+      // Add water bottle as a free item to every order
+      const orderItems = [
+        ...tempCart.map(item => ({
+          menuItemId: item.menuItem.id,
+          quantity: item.quantity,
+          customizations: item.customizations,
+          notes: item.notes,
+        })),
+        // Add free water bottle with special ID
+        {
+          menuItemId: 'FREE_WATER_BOTTLE',
+          quantity: 1,
+          customizations: {},
+          notes: null,
+        }
+      ];
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           restaurantId: restaurant.id,
           tableId: table.id,
-          items: tempCart.map(item => ({
-            menuItemId: item.menuItem.id,
-            quantity: item.quantity,
-            customizations: item.customizations,
-            notes: item.notes,
-          })),
+          items: orderItems,
         }),
       });
 
