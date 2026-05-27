@@ -921,7 +921,7 @@ export default function WaiterDashboard({
             return acc;
           }, [] as typeof allItems);
           
-          const itemsSubtotal = combinedItems.reduce((sum: number, item) => sum + parseFloat(item.subtotal), 0);
+          const itemsSubtotal = combinedItems.reduce((sum: number, item: typeof combinedItems[0]) => sum + parseFloat(item.subtotal), 0);
           const orderCount = tableData.orders.length;
           const digitalOrderingFee = ORDERING_FEE * orderCount;
           const grandTotal = itemsSubtotal + digitalOrderingFee;
