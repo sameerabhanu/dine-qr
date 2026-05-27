@@ -254,15 +254,35 @@ export default function WaiterDashboard({
           const newOrder = payload.new as any;
           
           // Check if this order should be visible to this waiter
-          // Only show if: waiterId is null OR waiterId matches this waiter
-          const shouldShowToThisWaiter = !newOrder.waiter_id || newOrder.waiter_id === waiter.id;
-          
-          if (!shouldShowToThisWaiter) {
-            console.log('🚫 Order assigned to different waiter, skipping');
+          // If waiterId is set, it means the table is already assigned to a waiter
+          if (newOrder.waiter_id) {
+            if (newOrder.waiter_id === waiter.id) {
+              // This order is for MY table - add to My Tables with notification
+              console.log('📥 New order for my table');
+              try {
+                const response = await fetch(`/api/${slug}/orders/${newOrder.id}/details`);
+                if (response.ok) {
+                  const data = await response.json();
+                  // Add to my orders instantly
+                  setMyOrders(prev => [data.order, ...prev]);
+                  
+                  // Play notification sound
+                  console.log('🔔 Playing notification for new order in my table');
+                  playNotificationSound();
+                  sendServiceWorkerNotification(data.order);
+                }
+              } catch (error) {
+                console.error('Failed to fetch new order details:', error);
+                router.refresh();
+              }
+            } else {
+              // Order assigned to different waiter, don't show
+              console.log('🚫 Order assigned to different waiter, skipping');
+            }
             return;
           }
           
-          // Fetch the complete order with table and items data
+          // waiterId is null - this is a new unclaimed table, show in Pending Tables
           try {
             const response = await fetch(`/api/${slug}/orders/${newOrder.id}/details`);
             if (response.ok) {
@@ -270,8 +290,8 @@ export default function WaiterDashboard({
               // Add to pending orders instantly
               setPendingOrders(prev => [data.order, ...prev]);
               
-              // Play notification sound for new order
-              console.log('🔔 Attempting to play notification for new order');
+              // Play notification sound for new pending table
+              console.log('🔔 Attempting to play notification for new pending table');
               playNotificationSound();
               
               // Send Service Worker notification (works even in background)
@@ -373,6 +393,42 @@ export default function WaiterDashboard({
     }
   };
 
+  const handleClaimTable = async (tableId: string, orderIds: string[]) => {
+    setClaimingId(tableId);
+    setError('');
+
+    try {
+      // Claim all orders in this table at once
+      const claimPromises = orderIds.map(orderId =>
+        fetch(`/api/${slug}/orders/${orderId}/claim`, {
+          method: 'POST',
+        })
+      );
+
+      const responses = await Promise.all(claimPromises);
+      const data = await Promise.all(responses.map(r => r.json()));
+
+      // Check if any failed
+      const failedResponse = responses.find(r => !r.ok);
+      if (failedResponse) {
+        const failedData = data[responses.indexOf(failedResponse)];
+        if (failedResponse.status === 409) {
+          setError('This table was just claimed by another waiter');
+        } else {
+          setError(failedData.error || 'Failed to claim table');
+        }
+        setClaimingId(null);
+        return;
+      }
+
+      // Success - Realtime will handle the UI update instantly
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
   const handleClaimOrder = async (orderId: string) => {
     setClaimingId(orderId);
     setError('');
@@ -464,6 +520,53 @@ export default function WaiterDashboard({
   });
   
   const groupedMyOrdersArray = Object.values(groupedMyOrders);
+
+  // Group pending orders by table for "Pending Tables" section
+  const groupedPendingTables = pendingOrders.reduce((acc, orderData) => {
+    const tableId = orderData.table?.id || 'no-table';
+    const tableNumber = orderData.table?.tableNumber || 'N/A';
+    
+    if (!acc[tableId]) {
+      acc[tableId] = {
+        tableId,
+        tableNumber,
+        table: orderData.table,
+        orders: [],
+        totalAmount: 0,
+        firstOrderTime: null,
+      };
+    }
+    
+    acc[tableId].orders.push({
+      order: orderData.order,
+      items: orderData.items,
+    });
+    acc[tableId].totalAmount += parseFloat(orderData.order.totalAmount || '0');
+    
+    if (!acc[tableId].firstOrderTime || orderData.order.createdAt < acc[tableId].firstOrderTime) {
+      acc[tableId].firstOrderTime = orderData.order.createdAt;
+    }
+    
+    return acc;
+  }, {} as Record<string, {
+    tableId: string;
+    tableNumber: string | number;
+    table: any;
+    orders: Array<{ order: any; items: any[] }>;
+    totalAmount: number;
+    firstOrderTime: any;
+  }>);
+  
+  // Sort orders within each pending table by createdAt (oldest first)
+  Object.values(groupedPendingTables).forEach(table => {
+    table.orders.sort((a, b) => {
+      const timeA = new Date(a.order.createdAt).getTime();
+      const timeB = new Date(b.order.createdAt).getTime();
+      return timeA - timeB;
+    });
+  });
+  
+  const groupedPendingTablesArray = Object.values(groupedPendingTables);
 
   // Toggle order served status
   const handleToggleServed = async (orderId: string) => {
@@ -662,42 +765,42 @@ export default function WaiterDashboard({
           </div>
         )}
 
-        {/* Pending Orders Section - Mobile Responsive */}
+        {/* Pending Tables Section - Mobile Responsive */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
-            Pending Orders ({pendingOrders.length})
+            Pending Tables ({groupedPendingTablesArray.length})
           </h2>
           
-          {pendingOrders.length === 0 ? (
+          {groupedPendingTablesArray.length === 0 ? (
             <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-8 sm:p-12 text-center">
               <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 text-green-500 mx-auto mb-3 sm:mb-4" />
               <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
-              <p className="text-sm sm:text-base text-gray-500">No pending orders at the moment</p>
+              <p className="text-sm sm:text-base text-gray-500">No pending tables at the moment</p>
             </div>
           ) : (
             <div className="grid gap-3 sm:gap-4">
-              {pendingOrders.map(({ order, table, items }) => (
+              {groupedPendingTablesArray.map((pendingTable) => (
                 <div
-                  key={order.id}
+                  key={pendingTable.tableId}
                   className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-4 md:p-6 hover:shadow-lg transition"
                 >
                   <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                         <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
-                          Table {table?.tableNumber || 'N/A'}
+                          Table {pendingTable.tableNumber}
                         </h3>
-                        <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
-                          #{order.id.substring(0, 8)}
+                        <span className="text-xs sm:text-sm text-orange-600 bg-orange-50 px-2 py-1 rounded-full font-semibold">
+                          {pendingTable.orders.length} {pendingTable.orders.length === 1 ? 'order' : 'orders'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 flex-wrap">
                         <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                         <span className="truncate">
-                          {order.createdAt ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true }) : 'Just now'}
+                          {pendingTable.firstOrderTime ? formatDistanceToNow(new Date(pendingTable.firstOrderTime), { addSuffix: true }) : 'Just now'}
                         </span>
-                        {order.createdAt && Date.now() - new Date(order.createdAt).getTime() > 10 * 60 * 1000 && (
+                        {pendingTable.firstOrderTime && Date.now() - new Date(pendingTable.firstOrderTime).getTime() > 10 * 60 * 1000 && (
                           <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
                             URGENT
                           </span>
@@ -706,47 +809,51 @@ export default function WaiterDashboard({
                     </div>
                     <div className="text-right flex-shrink-0">
                       <span className="text-xl sm:text-2xl font-bold text-gray-900">
-                        ₹{parseFloat(order.totalAmount || '0').toFixed(0)}
+                        ₹{pendingTable.totalAmount.toFixed(0)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Order Items - Mobile Responsive */}
-                  {items && items.length > 0 && (
-                    <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl">
-                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                        <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" />
-                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Order Items</h4>
-                      </div>
-                      <div className="space-y-1.5 sm:space-y-2">
-                        {items.map((item) => (
-                          <div key={item.id} className="flex justify-between items-start gap-2">
-                            <div className="flex-1 min-w-0">
-                              <span className="text-gray-900 font-medium text-xs sm:text-sm block">
-                                {item.quantity}x {item.menuItemName}
+                  {/* Show all orders in this table */}
+                  <div className="space-y-3 mb-4">
+                    {pendingTable.orders.map(({ order, items }, idx) => (
+                      <div key={order.id} className="border-t border-gray-100 pt-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-semibold text-gray-600">Order #{idx + 1}</span>
+                          <span className="text-xs text-gray-500">
+                            {order.createdAt ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true }) : 'Just now'}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {items.map((item) => (
+                            <div key={item.id} className="flex justify-between items-start gap-2">
+                              <div className="flex-1 min-w-0">
+                                <span className="text-gray-900 font-medium text-xs sm:text-sm block">
+                                  {item.quantity}x {item.menuItemName}
+                                </span>
+                              </div>
+                              <span className="text-gray-700 font-medium text-xs sm:text-sm flex-shrink-0">
+                                ₹{parseFloat(item.subtotal).toFixed(0)}
                               </span>
                             </div>
-                            <span className="text-gray-700 font-medium text-xs sm:text-sm flex-shrink-0">
-                              ₹{parseFloat(item.subtotal).toFixed(0)}
-                            </span>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-
+                    ))}
+                  </div>
+                  
                   <button
-                    onClick={() => handleClaimOrder(order.id)}
-                    disabled={claimingId === order.id}
+                    onClick={() => handleClaimTable(pendingTable.tableId, pendingTable.orders.map(o => o.order.id))}
+                    disabled={claimingId === pendingTable.tableId}
                     className="w-full py-2.5 sm:py-3 bg-black text-white rounded-lg sm:rounded-xl hover:bg-gray-800 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                   >
-                    {claimingId === order.id ? (
+                    {claimingId === pendingTable.tableId ? (
                       <>
                         <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                         Claiming...
                       </>
                     ) : (
-                      'Accept Order'
+                      'Accept Table'
                     )}
                   </button>
                 </div>
@@ -759,7 +866,7 @@ export default function WaiterDashboard({
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-            My Orders ({myOrders.length} {myOrders.length === 1 ? 'order' : 'orders'}, {groupedMyOrdersArray.length} {groupedMyOrdersArray.length === 1 ? 'table' : 'tables'})
+            My Tables ({groupedMyOrdersArray.length} {groupedMyOrdersArray.length === 1 ? 'table' : 'tables'}, {myOrders.length} {myOrders.length === 1 ? 'order' : 'orders'})
           </h2>
           
           {groupedMyOrdersArray.length === 0 ? (
