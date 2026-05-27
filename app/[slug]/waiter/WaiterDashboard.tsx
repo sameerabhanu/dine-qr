@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Clock, LogOut, AlertCircle, CheckCircle, Loader2, ShoppingBag, QrCode, User, X, Volume2, VolumeX, Bell, BellOff } from 'lucide-react';
+import { Clock, LogOut, AlertCircle, CheckCircle, Loader2, ShoppingBag, QrCode, User, X, Volume2, VolumeX, Bell, BellOff, Receipt } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+
+const ORDERING_FEE = 8; // Digital ordering fee per order
 
 type OrderItem = {
   id: string;
@@ -42,6 +44,7 @@ export default function WaiterDashboard({
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [showInvoice, setShowInvoice] = useState<string | null>(null);
   const [invoiceData, setInvoiceData] = useState<any>(null);
+  const [showBill, setShowBill] = useState<string | null>(null); // tableId for bill modal
   const [error, setError] = useState('');
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -854,32 +857,147 @@ export default function WaiterDashboard({
                     ))}
                   </div>
 
-                  <button
-                    onClick={() => handleCompleteTableOrders(
-                      groupedTable.tableId,
-                      groupedTable.orders.map(o => o.order.id),
-                      'cash'
-                    )}
-                    disabled={completingId === groupedTable.tableId}
-                    className="w-full py-2.5 sm:py-3 bg-green-600 text-white rounded-lg sm:rounded-xl hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
-                  >
-                    {completingId === groupedTable.tableId ? (
-                      <>
-                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                        Completing...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        Complete Table Service
-                      </>
-                    )}
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <button
+                      onClick={() => setShowBill(groupedTable.tableId)}
+                      className="py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg sm:rounded-xl hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
+                    >
+                      <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
+                      Generate Bill
+                    </button>
+                    
+                    <button
+                      onClick={() => handleCompleteTableOrders(
+                        groupedTable.tableId,
+                        groupedTable.orders.map(o => o.order.id),
+                        'cash'
+                      )}
+                      disabled={completingId === groupedTable.tableId}
+                      className="py-2.5 sm:py-3 bg-green-600 text-white rounded-lg sm:rounded-xl hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+                    >
+                      {completingId === groupedTable.tableId ? (
+                        <>
+                          <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                          Completing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                          Complete
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Bill Modal - Detailed itemized bill with digital ordering fee */}
+        {showBill && (() => {
+          const tableData = groupedMyOrdersArray.find(t => t.tableId === showBill);
+          if (!tableData) return null;
+          
+          // Calculate all items across all orders
+          const allItems = tableData.orders.flatMap(o => o.items);
+          const itemsSubtotal = allItems.reduce((sum, item) => sum + parseFloat(item.subtotal), 0);
+          const orderCount = tableData.orders.length;
+          const digitalOrderingFee = ORDERING_FEE * orderCount;
+          const grandTotal = itemsSubtotal + digitalOrderingFee;
+          
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+              <div className="bg-white rounded-xl sm:rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-4 sm:mb-6">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Bill</h2>
+                    <button
+                      onClick={() => setShowBill(null)}
+                      className="text-gray-500 hover:text-gray-900 p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </div>
+
+                  {/* Restaurant Info */}
+                  <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
+                    <h3 className="font-bold text-base sm:text-lg">{restaurant.name}</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">{restaurant.address || ''}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">{restaurant.phone || ''}</p>
+                  </div>
+
+                  {/* Table Info */}
+                  <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
+                    <div className="flex justify-between text-xs sm:text-sm mb-2">
+                      <span className="text-gray-600">Table:</span>
+                      <span className="font-semibold">{tableData.tableNumber}</span>
+                    </div>
+                    <div className="flex justify-between text-xs sm:text-sm">
+                      <span className="text-gray-600">Number of Orders:</span>
+                      <span className="font-semibold">{orderCount}</span>
+                    </div>
+                  </div>
+
+                  {/* Items List */}
+                  <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
+                    <h4 className="font-semibold mb-3 text-sm sm:text-base">Items</h4>
+                    <div className="space-y-2">
+                      {allItems.map((item, index) => (
+                        <div key={item.id || index} className="flex justify-between text-xs sm:text-sm">
+                          <div className="flex-1 pr-2">
+                            <span className="font-medium">{item.menuItemName}</span>
+                            <div className="text-gray-500">
+                              Qty: {item.quantity} × ₹{parseFloat(item.priceAtOrder).toFixed(0)}
+                            </div>
+                          </div>
+                          <span className="font-semibold flex-shrink-0">₹{parseFloat(item.subtotal).toFixed(0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bill Summary */}
+                  <div className="space-y-2 mb-4 sm:mb-6">
+                    <div className="flex justify-between text-xs sm:text-sm">
+                      <span className="text-gray-600">Items Subtotal:</span>
+                      <span className="font-medium">₹{itemsSubtotal.toFixed(0)}</span>
+                    </div>
+                    
+                    {/* Digital Ordering Fee Section */}
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="flex justify-between text-xs sm:text-sm text-blue-700 mb-1">
+                        <span className="font-medium">Digital Ordering Fee:</span>
+                        <span className="font-medium">₹{ORDERING_FEE} × {orderCount} orders</span>
+                      </div>
+                      <div className="flex justify-between text-xs sm:text-sm text-blue-700">
+                        <span className="font-medium">Total Ordering Fee:</span>
+                        <span className="font-semibold">₹{digitalOrderingFee.toFixed(0)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between font-bold text-base sm:text-lg pt-3 border-t-2 border-gray-300">
+                      <span>Grand Total:</span>
+                      <span className="text-green-600">₹{grandTotal.toFixed(0)}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowBill(null);
+                      window.print();
+                    }}
+                    className="w-full py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg sm:rounded-xl hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2"
+                  >
+                    <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Print Bill
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Invoice Modal - Mobile Responsive */}
         {showInvoice && invoiceData && (
