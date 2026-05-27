@@ -473,6 +473,22 @@ export default function WaiterDashboard({
   
   const groupedMyOrdersArray = Object.values(groupedMyOrders);
 
+  // Debug logging for grouped orders
+  React.useEffect(() => {
+    if (groupedMyOrdersArray.length > 0) {
+      console.log('🔍 GROUPED MY ORDERS:', groupedMyOrdersArray.map(table => ({
+        tableNumber: table.tableNumber,
+        orderCount: table.orders.length,
+        orders: table.orders.map((o, idx) => ({
+          displayIndex: idx,
+          orderId: o.order.id.substring(0, 8),
+          createdAt: o.order.createdAt,
+          timeAgo: formatDistanceToNow(new Date(o.order.createdAt), { addSuffix: true })
+        }))
+      })));
+    }
+  }, [groupedMyOrdersArray.length, myOrders.length]);
+
   // Toggle order served status
   const handleToggleServed = async (orderId: string) => {
     try {
