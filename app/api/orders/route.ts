@@ -18,9 +18,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Log all items including water bottle
-    console.log('📦 Items received:', JSON.stringify(items, null, 2));
-
     // Fetch menu items to get prices and names with retry logic
     const menuItemIds = items.map((item: any) => item.menuItemId);
     
@@ -86,7 +83,6 @@ export async function POST(req: NextRequest) {
     });
 
     console.log('💰 Order total:', total, 'Items:', itemsWithPrices.length);
-    console.log('🍾 Items with prices:', JSON.stringify(itemsWithPrices, null, 2));
 
     // Check if there's already a waiter assigned to this table
     // (sticky waiter assignment - keeps the same waiter for all orders from a table)
@@ -135,7 +131,6 @@ export async function POST(req: NextRequest) {
     console.log('✅ Order created:', order.id, 'assigned to waiter:', order.waiterId || 'none (available to all)');
 
     // Create order items with all required fields
-    console.log('💾 Inserting order items into database...');
     const insertedItems = await db.insert(orderItems).values(
       itemsWithPrices.map((item: any) => ({
         id: randomUUID(),
@@ -149,7 +144,6 @@ export async function POST(req: NextRequest) {
     ).returning();
 
     console.log('✅ Order items created:', insertedItems.length);
-    console.log('📋 Inserted items:', JSON.stringify(insertedItems, null, 2));
 
     return NextResponse.json({ 
       success: true, 
