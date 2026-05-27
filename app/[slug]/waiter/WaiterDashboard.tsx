@@ -454,6 +454,15 @@ export default function WaiterDashboard({
     firstOrderTime: any;
   }>);
   
+  // Sort orders within each table by createdAt (oldest first)
+  Object.values(groupedMyOrders).forEach(table => {
+    table.orders.sort((a, b) => {
+      const timeA = new Date(a.order.createdAt).getTime();
+      const timeB = new Date(b.order.createdAt).getTime();
+      return timeA - timeB; // Oldest first
+    });
+  });
+  
   const groupedMyOrdersArray = Object.values(groupedMyOrders);
 
   // Toggle order served status
