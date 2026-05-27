@@ -159,6 +159,8 @@ export default function OrderingInterface({
         }
       ];
 
+      console.log('🚀 Placing order with items:', orderItems);
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
