@@ -424,18 +424,20 @@ export default function WaiterDashboard({
         tableNumber,
         table: orderData.table,
         orders: [],
-        allItems: [],
         totalAmount: 0,
-        firstOrderTime: orderData.order.createdAt,
+        firstOrderTime: null,
       };
     }
     
-    acc[tableId].orders.push(orderData.order);
-    acc[tableId].allItems.push(...orderData.items);
+    // Keep full order data with items
+    acc[tableId].orders.push({
+      order: orderData.order,
+      items: orderData.items,
+    });
     acc[tableId].totalAmount += parseFloat(orderData.order.totalAmount || '0');
     
     // Keep the earliest order time
-    if (orderData.order.createdAt < acc[tableId].firstOrderTime) {
+    if (!acc[tableId].firstOrderTime || orderData.order.createdAt < acc[tableId].firstOrderTime) {
       acc[tableId].firstOrderTime = orderData.order.createdAt;
     }
     
@@ -444,13 +446,40 @@ export default function WaiterDashboard({
     tableId: string;
     tableNumber: string | number;
     table: any;
-    orders: any[];
-    allItems: any[];
+    orders: Array<{ order: any; items: any[] }>;
     totalAmount: number;
     firstOrderTime: any;
   }>);
   
   const groupedMyOrdersArray = Object.values(groupedMyOrders);
+
+  // Toggle order served status
+  const handleToggleServed = async (orderId: string) => {
+    try {
+      // Find the order and toggle its status between 'claimed' and 'served'
+      const orderToUpdate = myOrders.find(o => o.order.id === orderId);
+      if (!orderToUpdate) return;
+      
+      const newStatus = orderToUpdate.order.status === 'served' ? 'claimed' : 'served';
+      
+      const response = await fetch(`/api/${slug}/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        // Update local state optimistically
+        setMyOrders(prev => prev.map(o => 
+          o.order.id === orderId 
+            ? { ...o, order: { ...o.order, status: newStatus } }
+            : o
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to toggle served status:', error);
+    }
+  };
 
   // Complete all orders for a specific table
   const handleCompleteTableOrders = async (tableId: string, orderIds: string[], paymentMethod: string) => {
@@ -732,7 +761,7 @@ export default function WaiterDashboard({
                   key={groupedTable.tableId}
                   className="bg-white rounded-xl sm:rounded-2xl border-2 border-green-200 p-3 sm:p-4 md:p-6"
                 >
-                  <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                  <div className="flex items-start justify-between mb-4 sm:mb-5 gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                         <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
@@ -755,36 +784,80 @@ export default function WaiterDashboard({
                     </div>
                   </div>
 
-                  {/* All Order Items - Mobile Responsive */}
-                  {groupedTable.allItems && groupedTable.allItems.length > 0 && (
-                    <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl">
-                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                        <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" />
-                        <h4 className="font-semibold text-gray-900 text-sm sm:text-base">
-                          All Items ({groupedTable.allItems.length})
-                        </h4>
-                      </div>
-                      <div className="space-y-1.5 sm:space-y-2">
-                        {groupedTable.allItems.map((item) => (
-                          <div key={item.id} className="flex justify-between items-start gap-2">
-                            <div className="flex-1 min-w-0">
-                              <span className="text-gray-900 font-medium text-xs sm:text-sm block">
-                                {item.quantity}x {item.menuItemName}
-                              </span>
-                            </div>
-                            <span className="text-gray-700 font-medium text-xs sm:text-sm flex-shrink-0">
-                              ₹{parseFloat(item.subtotal).toFixed(0)}
+                  {/* Separate Orders - Each with its own items and served toggle */}
+                  <div className="space-y-3 sm:space-y-4 mb-4">
+                    {groupedTable.orders.map(({ order, items }, index) => (
+                      <div 
+                        key={order.id}
+                        className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition ${
+                          order.status === 'served' 
+                            ? 'bg-green-50 border-green-300' 
+                            : 'bg-gray-50 border-gray-200'
+                        }`}
+                      >
+                        {/* Order Header */}
+                        <div className="flex items-center justify-between mb-2 sm:mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs sm:text-sm font-semibold text-gray-700">
+                              Order #{index + 1}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {order.createdAt ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true }) : 'Just now'}
                             </span>
                           </div>
-                        ))}
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm sm:text-base font-bold text-gray-900">
+                              ₹{parseFloat(order.totalAmount || '0').toFixed(0)}
+                            </span>
+                            <button
+                              onClick={() => handleToggleServed(order.id)}
+                              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition flex items-center gap-1 ${
+                                order.status === 'served'
+                                  ? 'bg-green-600 text-white hover:bg-green-700'
+                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              }`}
+                            >
+                              {order.status === 'served' ? (
+                                <>
+                                  <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                  Served
+                                </>
+                              ) : (
+                                'Mark Served'
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Order Items */}
+                        {items && items.length > 0 && (
+                          <div className="space-y-1.5 sm:space-y-2">
+                            {items.map((item) => (
+                              <div key={item.id} className="flex justify-between items-start gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <span className={`font-medium text-xs sm:text-sm block ${
+                                    order.status === 'served' ? 'text-green-900' : 'text-gray-900'
+                                  }`}>
+                                    {item.quantity}x {item.menuItemName}
+                                  </span>
+                                </div>
+                                <span className={`font-medium text-xs sm:text-sm flex-shrink-0 ${
+                                  order.status === 'served' ? 'text-green-700' : 'text-gray-700'
+                                }`}>
+                                  ₹{parseFloat(item.subtotal).toFixed(0)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
 
                   <button
                     onClick={() => handleCompleteTableOrders(
                       groupedTable.tableId,
-                      groupedTable.orders.map(o => o.id),
+                      groupedTable.orders.map(o => o.order.id),
                       'cash'
                     )}
                     disabled={completingId === groupedTable.tableId}
