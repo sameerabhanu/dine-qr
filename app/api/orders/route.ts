@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
       itemsWithPrices.map((item: any) => ({
         id: randomUUID(),
         orderId: order.id,
-        menuItemId: item.menuItemId,
+        menuItemId: item.menuItemId === 'FREE_WATER_BOTTLE' ? null : item.menuItemId,
         menuItemName: item.menuItemName,
         quantity: item.quantity,
         priceAtOrder: item.priceAtOrder,

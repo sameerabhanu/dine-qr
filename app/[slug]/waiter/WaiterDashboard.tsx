@@ -789,7 +789,7 @@ export default function WaiterDashboard({
 
                   {/* Separate Orders - Each with its own items and served toggle */}
                   <div className="space-y-3 sm:space-y-4 mb-4">
-                    {groupedTable.orders.map(({ order, items }, index) => (
+                    {[...groupedTable.orders].reverse().map(({ order, items }, index) => (
                       <div 
                         key={order.id}
                         className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition ${
@@ -802,7 +802,7 @@ export default function WaiterDashboard({
                         <div className="flex items-center justify-between mb-2 sm:mb-3">
                           <div className="flex items-center gap-2">
                             <span className="text-xs sm:text-sm font-semibold text-gray-700">
-                              Order #{index + 1}
+                              Order #{groupedTable.orders.length - index}
                             </span>
                             <span className="text-xs text-gray-500">
                               {order.createdAt ? formatDistanceToNow(new Date(order.createdAt), { addSuffix: true }) : 'Just now'}
