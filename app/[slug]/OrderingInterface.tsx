@@ -532,7 +532,17 @@ export default function OrderingInterface({
               
               {/* Ordering Fee */}
               <div className="flex items-center justify-between text-gray-600">
-                <span className="text-sm sm:text-base">Digital Ordering Fee</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm sm:text-base">Digital Ordering Fee</span>
+                  <a
+                    href="/why-ordering-fee"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-700 underline"
+                  >
+                    Why?
+                  </a>
+                </div>
                 <span className="font-medium text-sm sm:text-base">
                   {CURRENCY.symbol}{ORDERING_FEE.toFixed(0)}
                 </span>
