@@ -927,8 +927,8 @@ export default function WaiterDashboard({
           }, [] as typeof allItems);
           
           // Separate water bottles from regular items
-          const regularItems = combinedItems.filter(item => item.menuItemName !== 'Water Bottle 500ML');
-          const waterBottleItems = combinedItems.filter(item => item.menuItemName === 'Water Bottle 500ML');
+          const regularItems = combinedItems.filter((item: typeof combinedItems[0]) => item.menuItemName !== 'Water Bottle 500ML');
+          const waterBottleItems = combinedItems.filter((item: typeof combinedItems[0]) => item.menuItemName === 'Water Bottle 500ML');
           
           // Combine them with water bottles at the end
           const sortedItems = [...regularItems, ...waterBottleItems];
