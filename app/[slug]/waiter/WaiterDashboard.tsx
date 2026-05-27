@@ -955,7 +955,7 @@ export default function WaiterDashboard({
                         {/* Digital Ordering Fee */}
                         <tr className="border-b border-gray-200">
                           <td colSpan={3} className="py-3 px-3 text-sm text-gray-900 text-right">
-                            Digital Ordering Fee for {orderCount} {orderCount === 1 ? 'order' : 'orders'} @₹{ORDERING_FEE}:
+                            Digital Ordering Fee:
                           </td>
                           <td className="py-3 px-3 text-sm font-medium text-right text-gray-900">₹{digitalOrderingFee.toFixed(0)}</td>
                         </tr>
