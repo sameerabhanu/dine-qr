@@ -52,6 +52,11 @@ export default async function WaiterPage({
     )
     .orderBy(orders.createdAt);
 
+  console.log(`🔍 [Waiter: ${waiter.name}] Found ${pendingOrdersData.length} pending orders`);
+  pendingOrdersData.forEach(o => {
+    console.log(`  - Order ${o.order.id.substring(0, 8)}: Table ${o.table?.tableNumber || 'N/A'}, WaiterId: ${o.order.waiterId || 'null'}, Status: ${o.order.status}`);
+  });
+
   // Fetch orders claimed by this waiter (both claimed and served status)
   const myOrdersData = await db
     .select({

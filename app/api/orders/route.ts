@@ -76,9 +76,13 @@ export async function POST(req: NextRequest) {
     let assignedWaiterId = null;
     
     if (tableId) {
-      const [existingOrder] = await db
+      console.log('🔍 Checking for existing waiter assignment for tableId:', tableId);
+      
+      const existingOrders = await db
         .select({
           waiterId: orders.waiterId,
+          status: orders.status,
+          createdAt: orders.createdAt,
         })
         .from(orders)
         .where(
@@ -86,13 +90,15 @@ export async function POST(req: NextRequest) {
             eq(orders.tableId, tableId),
             inArray(orders.status, ['claimed', 'served'])
           )
-        )
-        .orderBy(orders.createdAt)
-        .limit(1);
+        );
       
-      if (existingOrder?.waiterId) {
-        assignedWaiterId = existingOrder.waiterId;
-        console.log('📌 Found existing waiter assignment for this table:', assignedWaiterId);
+      console.log('📊 Found existing orders for this table:', existingOrders.length, existingOrders);
+      
+      if (existingOrders.length > 0 && existingOrders[0]?.waiterId) {
+        assignedWaiterId = existingOrders[0].waiterId;
+        console.log('📌 Assigning order to existing waiter:', assignedWaiterId);
+      } else {
+        console.log('✨ No existing waiter for this table, order will be available to all waiters');
       }
     }
 
@@ -109,7 +115,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    console.log('✅ Order created:', order.id);
+    console.log('✅ Order created:', order.id, 'assigned to waiter:', order.waiterId || 'none (available to all)');
 
     // Create order items with all required fields
     const insertedItems = await db.insert(orderItems).values(
