@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { orders, tables, orderItems } from '@/lib/db/schema';
-import { eq, and, inArray, desc } from 'drizzle-orm';
+import { eq, and, inArray, desc, or, isNull } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
-    // Fetch pending orders (unclaimed)
+    // Fetch pending orders for this waiter
+    // Show orders where waiterId=this waiter OR waiterId=null (new tables)
     const pendingOrdersData = await db
       .select({
         order: orders,
@@ -26,7 +27,11 @@ export async function GET(req: NextRequest) {
       .where(
         and(
           eq(orders.restaurantId, restaurantId),
-          eq(orders.status, 'pending')
+          eq(orders.status, 'pending'),
+          or(
+            eq(orders.waiterId, waiterId),
+            isNull(orders.waiterId)
+          )
         )
       )
       .orderBy(orders.createdAt);

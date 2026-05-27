@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { orders } from '@/lib/db/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and, inArray, or, isNull } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,16 +17,31 @@ export async function GET(req: NextRequest) {
 
     // Lightweight query - only count, no joins, no items
     const [pendingResult, myOrdersResult] = await Promise.all([
-      // Count pending orders
-      db
-        .select({ id: orders.id })
-        .from(orders)
-        .where(
-          and(
-            eq(orders.restaurantId, restaurantId),
-            eq(orders.status, 'pending')
-          )
-        ),
+      // Count pending orders for this waiter
+      // Show orders where waiterId=this waiter OR waiterId=null (new tables)
+      waiterId
+        ? db
+            .select({ id: orders.id })
+            .from(orders)
+            .where(
+              and(
+                eq(orders.restaurantId, restaurantId),
+                eq(orders.status, 'pending'),
+                or(
+                  eq(orders.waiterId, waiterId),
+                  isNull(orders.waiterId)
+                )
+              )
+            )
+        : db
+            .select({ id: orders.id })
+            .from(orders)
+            .where(
+              and(
+                eq(orders.restaurantId, restaurantId),
+                eq(orders.status, 'pending')
+              )
+            ),
       
       // Count waiter's orders
       waiterId

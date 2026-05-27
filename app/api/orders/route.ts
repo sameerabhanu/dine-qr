@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { orders, orderItems, menuItems } from '@/lib/db/schema';
 import { randomUUID } from 'crypto';
-import { eq } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,6 +71,31 @@ export async function POST(req: NextRequest) {
 
     console.log('💰 Order total:', total, 'Items:', itemsWithPrices.length);
 
+    // Check if there's already a waiter assigned to this table
+    // (sticky waiter assignment - keeps the same waiter for all orders from a table)
+    let assignedWaiterId = null;
+    
+    if (tableId) {
+      const [existingOrder] = await db
+        .select({
+          waiterId: orders.waiterId,
+        })
+        .from(orders)
+        .where(
+          and(
+            eq(orders.tableId, tableId),
+            inArray(orders.status, ['claimed', 'served'])
+          )
+        )
+        .orderBy(orders.createdAt)
+        .limit(1);
+      
+      if (existingOrder?.waiterId) {
+        assignedWaiterId = existingOrder.waiterId;
+        console.log('📌 Found existing waiter assignment for this table:', assignedWaiterId);
+      }
+    }
+
     // Create order
     const [order] = await db
       .insert(orders)
@@ -78,6 +103,7 @@ export async function POST(req: NextRequest) {
         id: randomUUID(),
         restaurantId,
         tableId,
+        waiterId: assignedWaiterId, // Auto-assign if waiter already serving this table
         status: 'pending',
         totalAmount: total.toString(),
       })

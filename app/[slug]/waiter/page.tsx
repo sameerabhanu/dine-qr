@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { restaurants, orders, tables, orderItems } from '@/lib/db/schema';
-import { eq, and, inArray, desc } from 'drizzle-orm';
+import { eq, and, inArray, desc, or, isNull } from 'drizzle-orm';
 import { requireWaiterAuth } from '@/lib/waiter-auth';
 import WaiterDashboard from './WaiterDashboard';
 
@@ -29,7 +29,10 @@ export default async function WaiterPage({
   // Check waiter authentication
   const { waiter } = await requireWaiterAuth(slug, `/${slug}/waiter`);
 
-  // Fetch pending orders (unclaimed)
+  // Fetch pending orders for this waiter
+  // Show orders where:
+  // 1. status='pending' AND waiterId=this waiter (orders auto-assigned to them)
+  // 2. status='pending' AND waiterId=null (new orders from tables with no waiter yet)
   const pendingOrdersData = await db
     .select({
       order: orders,
@@ -40,7 +43,11 @@ export default async function WaiterPage({
     .where(
       and(
         eq(orders.restaurantId, restaurant.id),
-        eq(orders.status, 'pending')
+        eq(orders.status, 'pending'),
+        or(
+          eq(orders.waiterId, waiter.id), // Orders assigned to this waiter
+          isNull(orders.waiterId) // Orders from new tables (no waiter assigned yet)
+        )
       )
     )
     .orderBy(orders.createdAt);
