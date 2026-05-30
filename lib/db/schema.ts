@@ -98,7 +98,7 @@ export const orders = pgTable('orders', {
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   
   // Digital ordering fee
-  orderingFee: decimal('ordering_fee', { precision: 10, scale: 2 }).default('3.00'),
+  orderingFee: decimal('ordering_fee', { precision: 10, scale: 2 }).default('7.00'),
   
   createdAt: timestamp('created_at').defaultNow(),
 });
