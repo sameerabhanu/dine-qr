@@ -21,6 +21,17 @@ type PendingPaymentOrder = {
   items: OrderItem[];
 };
 
+type GroupedTable = {
+  tableId: string;
+  tableNumber: number;
+  waiter: any;
+  orders: PendingPaymentOrder[];
+  totalAmount: number;
+  orderingFeesTotal: number;
+  grandTotal: number;
+  earliestOrderTime: string;
+};
+
 export default function AdminDashboardClient({
   restaurant,
   slug,
@@ -34,6 +45,42 @@ export default function AdminDashboardClient({
   const [pendingPayments, setPendingPayments] = useState(initialPendingPayments);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+
+  // Group orders by table
+  const groupedByTable = pendingPayments.reduce((acc, paymentData) => {
+    const tableId = paymentData.table?.id || 'no-table';
+    const tableNumber = paymentData.table?.tableNumber || 0;
+    
+    if (!acc[tableId]) {
+      acc[tableId] = {
+        tableId,
+        tableNumber,
+        waiter: paymentData.waiter,
+        orders: [],
+        totalAmount: 0,
+        orderingFeesTotal: 0,
+        grandTotal: 0,
+        earliestOrderTime: paymentData.order.createdAt,
+      };
+    }
+    
+    acc[tableId].orders.push(paymentData);
+    const orderAmount = parseFloat(paymentData.order.totalAmount || '0');
+    const orderFee = parseFloat(paymentData.order.orderingFee || '0');
+    
+    acc[tableId].totalAmount += orderAmount;
+    acc[tableId].orderingFeesTotal += orderFee;
+    acc[tableId].grandTotal += (orderAmount + orderFee);
+    
+    // Track earliest order time
+    if (paymentData.order.createdAt < acc[tableId].earliestOrderTime) {
+      acc[tableId].earliestOrderTime = paymentData.order.createdAt;
+    }
+    
+    return acc;
+  }, {} as Record<string, GroupedTable>);
+
+  const groupedTablesArray = Object.values(groupedByTable);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -137,27 +184,34 @@ export default function AdminDashboardClient({
     };
   }, [restaurant.id, router, slug]);
 
-  const handleConfirmPayment = async (orderId: string) => {
-    setConfirmingId(orderId);
+  const handleConfirmTablePayment = async (tableId: string, orderIds: string[]) => {
+    setConfirmingId(tableId);
     setError('');
 
     try {
-      const response = await fetch(`/api/${slug}/orders/${orderId}/confirm-payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // Confirm all orders for this table
+      const confirmPromises = orderIds.map(orderId =>
+        fetch(`/api/${slug}/orders/${orderId}/confirm-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
-      const data = await response.json();
+      const responses = await Promise.all(confirmPromises);
+      const data = await Promise.all(responses.map(r => r.json()));
 
-      if (!response.ok) {
-        setError(data.error || 'Failed to confirm payment');
+      // Check if any failed
+      const failedResponse = responses.find(r => !r.ok);
+      if (failedResponse) {
+        const failedData = data[responses.indexOf(failedResponse)];
+        setError(failedData.error || 'Failed to confirm payment');
         setConfirmingId(null);
         return;
       }
 
-      // Optimistically remove from UI
-      setPendingPayments(prev => prev.filter(p => p.order.id !== orderId));
-      console.log('✅ Payment confirmed for order:', orderId);
+      // Optimistically remove all orders for this table from UI
+      setPendingPayments(prev => prev.filter(p => p.table?.id !== tableId));
+      console.log('✅ Payment confirmed for table:', tableId);
     } catch (err) {
       setError('Network error. Please try again.');
     } finally {
@@ -165,7 +219,7 @@ export default function AdminDashboardClient({
     }
   };
 
-  if (pendingPayments.length === 0) {
+  if (groupedTablesArray.length === 0) {
     return null;
   }
 
@@ -175,7 +229,7 @@ export default function AdminDashboardClient({
         <div className="flex items-center gap-2 mb-4">
           <AlertCircle className="w-5 h-5 text-yellow-600" />
           <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-            Pending Payment Confirmations ({pendingPayments.length})
+            Pending Payment Confirmations ({groupedTablesArray.length} {groupedTablesArray.length === 1 ? 'Table' : 'Tables'})
           </h2>
         </div>
 
@@ -186,50 +240,62 @@ export default function AdminDashboardClient({
         )}
 
         <div className="space-y-3 sm:space-y-4">
-          {pendingPayments.map((paymentData) => {
-            const totalAmount = parseFloat(paymentData.order.totalAmount || '0');
-            const orderingFee = parseFloat(paymentData.order.orderingFee || '0');
-            const grandTotal = totalAmount + orderingFee;
+          {groupedTablesArray.map((tableData) => {
+            // Combine all items from all orders
+            const allItems: Record<string, { quantity: number; priceAtOrder: number; subtotal: number }> = {};
+            tableData.orders.forEach(order => {
+              order.items.forEach(item => {
+                if (!allItems[item.menuItemName]) {
+                  allItems[item.menuItemName] = {
+                    quantity: 0,
+                    priceAtOrder: parseFloat(item.priceAtOrder),
+                    subtotal: 0,
+                  };
+                }
+                allItems[item.menuItemName].quantity += item.quantity;
+                allItems[item.menuItemName].subtotal += parseFloat(item.subtotal);
+              });
+            });
 
             return (
               <div
-                key={paymentData.order.id}
+                key={tableData.tableId}
                 className="bg-white border border-gray-200 rounded-lg sm:rounded-xl p-4"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                        Table {paymentData.table?.tableNumber || 'N/A'}
+                        Table {tableData.tableNumber}
                       </h3>
                       <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                        Awaiting Confirmation
+                        {tableData.orders.length} {tableData.orders.length === 1 ? 'Order' : 'Orders'}
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      Waiter: {paymentData.waiter?.name || 'Unknown'} • {' '}
-                      {formatDistanceToNow(new Date(paymentData.order.createdAt), { addSuffix: true })}
+                      Waiter: {tableData.waiter?.name || 'Unknown'} • {' '}
+                      {formatDistanceToNow(new Date(tableData.earliestOrderTime), { addSuffix: true })}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg sm:text-xl font-bold text-gray-900">
-                      ₹{grandTotal.toFixed(2)}
+                      ₹{tableData.grandTotal.toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      + ₹{orderingFee.toFixed(2)} fee
+                      + ₹{tableData.orderingFeesTotal.toFixed(2)} fee
                     </p>
                   </div>
                 </div>
 
-                {/* Order Items */}
+                {/* Combined Order Items */}
                 <div className="mb-3 space-y-1">
-                  {paymentData.items.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
+                  {Object.entries(allItems).map(([itemName, itemData]) => (
+                    <div key={itemName} className="flex justify-between text-sm">
                       <span className="text-gray-700">
-                        {item.quantity}x {item.menuItemName}
+                        {itemData.quantity}x {itemName}
                       </span>
                       <span className="text-gray-900 font-medium">
-                        ₹{parseFloat(item.subtotal).toFixed(2)}
+                        ₹{itemData.subtotal.toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -237,11 +303,14 @@ export default function AdminDashboardClient({
 
                 {/* Confirm Button */}
                 <button
-                  onClick={() => handleConfirmPayment(paymentData.order.id)}
-                  disabled={confirmingId === paymentData.order.id}
+                  onClick={() => handleConfirmTablePayment(
+                    tableData.tableId,
+                    tableData.orders.map(o => o.order.id)
+                  )}
+                  disabled={confirmingId === tableData.tableId}
                   className="w-full py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {confirmingId === paymentData.order.id ? (
+                  {confirmingId === tableData.tableId ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Confirming...
