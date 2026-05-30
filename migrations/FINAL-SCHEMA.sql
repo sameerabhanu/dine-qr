@@ -118,7 +118,8 @@ CREATE TABLE menu_items (
 
 -- ============================================
 -- ORDERS TABLE
--- Orders are auto-deleted after completion
+-- Orders with 'payment_collected' status await admin confirmation
+-- Orders are deleted after admin confirms payment
 -- Only counts are tracked for billing
 -- ============================================
 CREATE TABLE orders (
@@ -129,7 +130,7 @@ CREATE TABLE orders (
     
     -- Order details
     table_number INTEGER,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'claimed', 'preparing', 'ready', 'served', 'completed')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'claimed', 'preparing', 'ready', 'served', 'completed', 'payment_collected')),
     total_amount DECIMAL(10, 2) NOT NULL,
     
     -- Digital ordering fee (configurable)
