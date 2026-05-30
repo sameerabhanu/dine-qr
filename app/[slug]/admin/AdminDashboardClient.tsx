@@ -55,8 +55,23 @@ export default function AdminDashboardClient({
           // Only show orders with payment_collected status
           if (newOrder.status === 'payment_collected') {
             console.log('📥 Admin: New payment to confirm:', newOrder);
-            // Refresh to get full order details with items
-            router.refresh();
+            
+            // Fetch full order details with items
+            try {
+              const response = await fetch(`/api/${slug}/orders/${newOrder.id}/details`);
+              if (response.ok) {
+                const data = await response.json();
+                
+                // Add to pending payments list
+                setPendingPayments(prev => {
+                  // Avoid duplicates
+                  if (prev.find(p => p.order.id === newOrder.id)) return prev;
+                  return [...prev, data.order];
+                });
+              }
+            } catch (error) {
+              console.error('Failed to fetch new order details:', error);
+            }
           }
         }
       )
@@ -68,13 +83,29 @@ export default function AdminDashboardClient({
           table: 'orders',
           filter: `restaurant_id=eq.${restaurant.id}`,
         },
-        (payload) => {
+        async (payload) => {
           const updatedOrder = payload.new as any;
           
           // Add to list if status changed to payment_collected
           if (updatedOrder.status === 'payment_collected') {
             console.log('📥 Admin: Payment collected for order:', updatedOrder);
-            router.refresh();
+            
+            // Fetch full order details with items
+            try {
+              const response = await fetch(`/api/${slug}/orders/${updatedOrder.id}/details`);
+              if (response.ok) {
+                const data = await response.json();
+                
+                // Add to pending payments list
+                setPendingPayments(prev => {
+                  // Avoid duplicates
+                  if (prev.find(p => p.order.id === updatedOrder.id)) return prev;
+                  return [...prev, data.order];
+                });
+              }
+            } catch (error) {
+              console.error('Failed to fetch order details:', error);
+            }
           }
         }
       )
@@ -104,7 +135,7 @@ export default function AdminDashboardClient({
       console.log('🔌 Admin: Cleaning up Realtime subscription');
       ordersChannel.unsubscribe();
     };
-  }, [restaurant.id, router]);
+  }, [restaurant.id, router, slug]);
 
   const handleConfirmPayment = async (orderId: string) => {
     setConfirmingId(orderId);

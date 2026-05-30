@@ -87,13 +87,6 @@ export default async function RestaurantAdminPage({
 
       {/* Main Content - Mobile Responsive */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Pending Payment Confirmations - Client Component with Realtime */}
-        <AdminDashboardClient 
-          restaurant={restaurant}
-          slug={slug}
-          initialPendingPayments={pendingPaymentOrdersWithItems}
-        />
-
         {/* Stats Grid - Three Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-6 hover:shadow-lg transition">
@@ -157,6 +150,13 @@ export default async function RestaurantAdminPage({
             </Link>
           </div>
         </div>
+
+        {/* Pending Payment Confirmations - Client Component with Realtime */}
+        <AdminDashboardClient 
+          restaurant={restaurant}
+          slug={slug}
+          initialPendingPayments={pendingPaymentOrdersWithItems}
+        />
       </div>
     </div>
   );

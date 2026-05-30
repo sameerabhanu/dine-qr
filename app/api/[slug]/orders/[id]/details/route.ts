@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { orders, tables, orderItems } from '@/lib/db/schema';
+import { orders, tables, orderItems, staff } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(
@@ -31,6 +31,16 @@ export async function GET(
         .limit(1);
     }
 
+    // Fetch waiter (if waiterId exists)
+    let waiter = null;
+    if (order.waiterId) {
+      [waiter] = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.id, order.waiterId))
+        .limit(1);
+    }
+
     // Fetch order items
     const items = await db
       .select()
@@ -41,6 +51,7 @@ export async function GET(
       order: {
         order,
         table,
+        waiter,
         items,
       },
     });
