@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata = {
   title: 'Why Digital Ordering Fee? - DineQR',
-  description: 'Understanding the ₹8 digital ordering fee and how it benefits your dining experience',
+  description: 'Understanding the ₹3 digital ordering fee and how it benefits your dining experience',
 };
 
 export default function WhyOrderingFeePage() {
@@ -30,11 +30,16 @@ export default function WhyOrderingFeePage() {
             <Smartphone className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Why Do We Charge ₹8 Digital Ordering Fee?
+            Why Do We Charge ₹3 Digital Ordering Fee?
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             A small fee that powers a seamless, contactless dining experience while supporting restaurant operations
           </p>
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl max-w-2xl mx-auto">
+            <p className="text-sm text-blue-900">
+              <strong>Want to avoid this fee?</strong> You can always order directly through our waitstaff at no additional charge. The digital ordering fee applies only when you choose the convenience of self-service ordering.
+            </p>
+          </div>
         </div>
 
         {/* Benefits Grid */}
@@ -82,7 +87,7 @@ export default function WhyOrderingFeePage() {
 
         {/* What You Get Section */}
         <div className="bg-white rounded-2xl p-8 border border-gray-200 mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">What Your ₹8 Includes:</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">What Your ₹3 Includes:</h2>
           <div className="space-y-4">
             {[
               'Real-time order tracking from kitchen to your table',
@@ -105,7 +110,7 @@ export default function WhyOrderingFeePage() {
         <div className="bg-white rounded-2xl p-8 border border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">How This Fee Helps Restaurants</h2>
           <p className="text-gray-700 mb-6">
-            The ₹8 digital ordering fee helps restaurants:
+            The ₹3 digital ordering fee helps restaurants:
           </p>
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start gap-3">

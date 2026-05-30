@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
-const ORDERING_FEE = 8; // Digital ordering fee per order
+const ORDERING_FEE = 3; // Digital ordering fee per order
 
 type OrderItem = {
   id: string;

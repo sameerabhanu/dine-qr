@@ -4,7 +4,7 @@
  */
 
 // Digital Ordering Fee (in rupees)
-export const ORDERING_FEE = 8;
+export const ORDERING_FEE = 3;
 
 // Agency Information (for monthly reports)
 export const AGENCY_INFO = {
