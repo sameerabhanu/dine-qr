@@ -89,7 +89,6 @@ export default function WhyOrderingFeePage() {
               'Instant menu updates with current availability',
               'Order customization and special requests',
               'Digital itemized bill generation',
-              'Complimentary water bottle with every order',
               'Secure payment infrastructure',
               'Multi-order management for your table',
               'Priority customer support',

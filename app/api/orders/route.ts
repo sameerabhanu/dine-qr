@@ -50,19 +50,6 @@ export async function POST(req: NextRequest) {
     // Calculate total with actual prices
     let total = 0;
     const itemsWithPrices = items.map((item: any) => {
-      // Handle special free water bottle item
-      if (item.menuItemId === 'FREE_WATER_BOTTLE') {
-        return {
-          menuItemId: 'FREE_WATER_BOTTLE',
-          menuItemName: 'Water Bottle 500ML',
-          quantity: item.quantity,
-          priceAtOrder: '0',
-          subtotal: '0',
-          customizations: item.customizations || {},
-          notes: item.notes || null,
-        };
-      }
-
       const menuItem = menuItemMap.get(item.menuItemId);
       if (!menuItem) {
         throw new Error(`Menu item not found: ${item.menuItemId}`);
@@ -135,7 +122,7 @@ export async function POST(req: NextRequest) {
       itemsWithPrices.map((item: any) => ({
         id: randomUUID(),
         orderId: order.id,
-        menuItemId: item.menuItemId === 'FREE_WATER_BOTTLE' ? null : item.menuItemId,
+        menuItemId: item.menuItemId,
         menuItemName: item.menuItemName,
         quantity: item.quantity,
         priceAtOrder: item.priceAtOrder,

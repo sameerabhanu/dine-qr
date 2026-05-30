@@ -1044,13 +1044,6 @@ export default function WaiterDashboard({
             return acc;
           }, [] as typeof allItems);
           
-          // Separate water bottles from regular items
-          const regularItems = combinedItems.filter((item: typeof combinedItems[0]) => item.menuItemName !== 'Water Bottle 500ML');
-          const waterBottleItems = combinedItems.filter((item: typeof combinedItems[0]) => item.menuItemName === 'Water Bottle 500ML');
-          
-          // Combine them with water bottles at the end
-          const sortedItems = [...regularItems, ...waterBottleItems];
-          
           const itemsSubtotal = combinedItems.reduce((sum: number, item: typeof combinedItems[0]) => sum + parseFloat(item.subtotal), 0);
           const orderCount = tableData.orders.length;
           const digitalOrderingFee = ORDERING_FEE * orderCount;
@@ -1086,7 +1079,7 @@ export default function WaiterDashboard({
                         </tr>
                       </thead>
                       <tbody>
-                        {sortedItems.map((item: typeof combinedItems[0], index: number) => (
+                        {combinedItems.map((item: typeof combinedItems[0], index: number) => (
                           <tr key={item.id || index} className="border-b border-gray-200 hover:bg-gray-50">
                             <td className="py-3 px-3 text-sm text-gray-900">{item.menuItemName}</td>
                             <td className="py-3 px-3 text-sm text-center text-gray-700">{item.quantity}</td>
