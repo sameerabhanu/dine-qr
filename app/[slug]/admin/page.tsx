@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { restaurants, orders, menuItems, categories, tables } from '@/lib/db/schema';
+import { restaurants, orders, menuItems, categories, tables, staff, orderItems } from '@/lib/db/schema';
 import { eq, desc, and, gte, count, lte } from 'drizzle-orm';
 import { requireRestaurantAuth } from '@/lib/restaurant-auth';
 import { startOfDay, startOfWeek, startOfMonth, endOfMonth, subMonths } from 'date-fns';
@@ -8,6 +8,7 @@ import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import LogoutButton from '@/components/LogoutButton';
 import { ChefHat, ShoppingBag, TrendingUp, Settings, Menu, Plus, Calendar } from 'lucide-react';
+import AdminDashboardClient from './AdminDashboardClient';
 
 export default async function RestaurantAdminPage({
   params,
@@ -29,6 +30,39 @@ export default async function RestaurantAdminPage({
   const todayOrdersCount = restaurant.todayOrdersCount || 0;
   const thisMonthOrdersCount = restaurant.currentMonthOrdersCount || 0;
   const lastMonthOrdersCount = restaurant.lastMonthOrdersCount || 0;
+
+  // Fetch orders awaiting payment confirmation
+  const pendingPaymentOrders = await db
+    .select({
+      order: orders,
+      table: tables,
+      waiter: staff,
+    })
+    .from(orders)
+    .leftJoin(tables, eq(orders.tableId, tables.id))
+    .leftJoin(staff, eq(orders.waiterId, staff.id))
+    .where(
+      and(
+        eq(orders.restaurantId, restaurant.id),
+        eq(orders.status, 'payment_collected')
+      )
+    )
+    .orderBy(desc(orders.createdAt));
+
+  // Fetch order items for pending payment orders
+  const pendingPaymentOrdersWithItems = await Promise.all(
+    pendingPaymentOrders.map(async (orderData) => {
+      const items = await db
+        .select()
+        .from(orderItems)
+        .where(eq(orderItems.orderId, orderData.order.id));
+      
+      return {
+        ...orderData,
+        items,
+      };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,6 +87,13 @@ export default async function RestaurantAdminPage({
 
       {/* Main Content - Mobile Responsive */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        {/* Pending Payment Confirmations - Client Component with Realtime */}
+        <AdminDashboardClient 
+          restaurant={restaurant}
+          slug={slug}
+          initialPendingPayments={pendingPaymentOrdersWithItems}
+        />
+
         {/* Stats Grid - Three Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-3 sm:p-6 hover:shadow-lg transition">

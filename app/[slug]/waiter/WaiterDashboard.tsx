@@ -340,6 +340,12 @@ export default function WaiterDashboard({
             }
           }
           
+          // Handle payment collection - remove from waiter's view (awaiting admin confirmation)
+          if (updatedOrder.status === 'payment_collected') {
+            setMyOrders(prev => prev.filter(o => o.order.id !== updatedOrder.id));
+            setPendingOrders(prev => prev.filter(o => o.order.id !== updatedOrder.id));
+          }
+          
           // Handle order completion by ANY waiter
           if (updatedOrder.status === 'completed') {
             // Remove from my orders and pending orders for ALL waiters
@@ -602,7 +608,7 @@ export default function WaiterDashboard({
     setError('');
 
     try {
-      // Complete all orders for this table sequentially
+      // Mark all orders for this table as payment collected
       for (const orderId of orderIds) {
         const response = await fetch(`/api/${slug}/orders/${orderId}/payment`, {
           method: 'POST',
@@ -613,7 +619,7 @@ export default function WaiterDashboard({
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.error || `Failed to complete order ${orderId.substring(0, 8)}`);
+          setError(data.error || `Failed to mark payment for order ${orderId.substring(0, 8)}`);
           setCompletingId(null);
           return;
         }
@@ -623,7 +629,7 @@ export default function WaiterDashboard({
       setMyOrders(prev => prev.filter(o => o.table?.id !== tableId));
       setPendingOrders(prev => prev.filter(o => o.table?.id !== tableId));
       
-      console.log(`✅ All orders for table ${tableId} completed and removed from UI`);
+      console.log(`✅ All orders for table ${tableId} marked as payment collected`);
     } catch (err) {
       setError('Network error. Please try again.');
     } finally {
@@ -1002,12 +1008,12 @@ export default function WaiterDashboard({
                       {completingId === groupedTable.tableId ? (
                         <>
                           <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                          Completing...
+                          Processing...
                         </>
                       ) : (
                         <>
                           <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                          Complete
+                          Mark as Paid
                         </>
                       )}
                     </button>

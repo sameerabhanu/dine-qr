@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const validStatuses = ['pending', 'preparing', 'ready', 'completed', 'cancelled'];
+    const validStatuses = ['pending', 'claimed', 'preparing', 'ready', 'served', 'completed', 'payment_collected', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status' },

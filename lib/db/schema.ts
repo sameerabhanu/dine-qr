@@ -85,7 +85,7 @@ export const menuItems = pgTable('menu_items', {
 });
 
 // ============================================
-// ORDERS TABLE (Simplified - Auto-deleted on completion)
+// ORDERS TABLE (Simplified - Auto-deleted on admin confirmation)
 // ============================================
 export const orders = pgTable('orders', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -94,7 +94,7 @@ export const orders = pgTable('orders', {
   waiterId: uuid('waiter_id').references(() => staff.id, { onDelete: 'set null' }),
   
   tableNumber: integer('table_number'),
-  status: text('status').default('pending'), // 'pending', 'accepted', 'preparing', 'completed'
+  status: text('status').default('pending'), // 'pending', 'claimed', 'preparing', 'ready', 'served', 'completed', 'payment_collected'
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   
   // Digital ordering fee

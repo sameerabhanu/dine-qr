@@ -29,7 +29,7 @@ export async function POST(
       );
     }
 
-    console.log('✅ Marking order as completed:', {
+    console.log('✅ Marking order as payment collected:', {
       orderId,
       paymentMethod,
       waiterId: waiter.id,
@@ -55,57 +55,17 @@ export async function POST(
       );
     }
 
-    // Get current date info for determining which counters to increment
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-
-    // Determine which counters to increment based on order creation time
-    const orderCreatedAt = new Date(existingOrder.createdAt!);
-    const isToday = orderCreatedAt >= today;
-    const isThisMonth = orderCreatedAt >= monthStart;
-
-    console.log('📊 Incrementing order counters:', {
-      orderId,
-      restaurantId: existingOrder.restaurantId,
-      orderCreatedAt,
-      isToday,
-      isThisMonth,
-    });
-
-    // Increment restaurant order counters
-    const updateData: any = {};
-    if (isToday) {
-      updateData.todayOrdersCount = sql`${restaurants.todayOrdersCount} + 1`;
-    }
-    if (isThisMonth) {
-      updateData.currentMonthOrdersCount = sql`${restaurants.currentMonthOrdersCount} + 1`;
-    }
-
-    if (Object.keys(updateData).length > 0) {
-      await db
-        .update(restaurants)
-        .set(updateData)
-        .where(eq(restaurants.id, existingOrder.restaurantId));
-    }
-
-    // Delete order items first (foreign key constraint)
+    // Update order status to 'payment_collected' (awaiting admin confirmation)
     await db
-      .delete(orderItems)
-      .where(eq(orderItems.orderId, orderId));
-
-    // Delete the order
-    await db
-      .delete(orders)
+      .update(orders)
+      .set({ status: 'payment_collected' })
       .where(eq(orders.id, orderId));
 
-    console.log('✅ Order completed, counters updated, and order deleted');
+    console.log('✅ Order marked as payment_collected, awaiting admin confirmation');
 
     return NextResponse.json({
       success: true,
-      message: 'Order completed, payment collected, and order archived',
+      message: 'Payment collected. Awaiting admin confirmation.',
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete order';
